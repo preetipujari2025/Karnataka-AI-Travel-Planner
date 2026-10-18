@@ -63,10 +63,11 @@ def _run_query(ql: str) -> list[dict]:
     settings = get_settings()
     if not settings.routing_enabled:
         raise RuntimeError("external providers disabled")
+    timeout = min(6.0, settings.provider_timeout_seconds)
     response = httpx.post(
         settings.overpass_base_url,
         data={"data": ql},
-        timeout=settings.provider_timeout_seconds,
+        timeout=timeout,
         headers={"User-Agent": "KarnatakaTravelPlanner/1.0 (research prototype)"},
     )
     response.raise_for_status()

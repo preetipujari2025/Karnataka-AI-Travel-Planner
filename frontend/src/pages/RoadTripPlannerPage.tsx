@@ -21,6 +21,8 @@ import type {
   DietaryPreference,
   RoadTripPlanResponse,
   RouteDiscoveryResponse,
+  TravellerType,
+  TripPriority,
 } from "../api/types";
 import StartLocationSelector from "../components/planner/StartLocationSelector";
 import RouteDiscoveryPanel from "../components/roadtrip/RouteDiscoveryPanel";
@@ -55,7 +57,10 @@ export default function RoadTripPlannerPage() {
   const [departureDate, setDepartureDate] = useState("");
   const [departureTime, setDepartureTime] = useState("08:00");
   const [days, setDays] = useState(2);
+  const [nights, setNights] = useState(1);
   const [travellers, setTravellers] = useState(2);
+  const [travellerType, setTravellerType] = useState<TravellerType>("couple");
+  const [tripPriority, setTripPriority] = useState<TripPriority>("balanced");
   const [budgetTier, setBudgetTier] = useState<BudgetTier>("mid");
   const [pace, setPace] = useState<Pace>("balanced");
   const [transport, setTransport] = useState<TransportPreference>("self_drive");
@@ -64,6 +69,7 @@ export default function RoadTripPlannerPage() {
   const [maxDetourKm, setMaxDetourKm] = useState(40);
   const [includeMeals, setIncludeMeals] = useState(true);
   const [dietary, setDietary] = useState<DietaryPreference>("no_preference");
+  const [mealBudgetPerDayInr, setMealBudgetPerDayInr] = useState<number | "">("");
   const [totalBudgetInr, setTotalBudgetInr] = useState(0);
 
   // Flow state
@@ -86,6 +92,8 @@ export default function RoadTripPlannerPage() {
 
   const discoveryRequest = useMemo(() => {
     const daysInt = Math.max(1, Math.round(days));
+    const nightsInt =
+      typeof nights === "number" && !isNaN(nights) ? Math.max(0, nights) : Math.max(0, daysInt - 1);
     return {
       start_city: startCity,
       final_destination: finalDestination,
@@ -93,8 +101,12 @@ export default function RoadTripPlannerPage() {
       pace,
       budget_tier: budgetTier,
       travellers,
+      traveller_type: travellerType,
+      trip_priority: tripPriority,
       transport_preference: transport,
       days: daysInt,
+      nights: nightsInt,
+      total_budget_inr: totalBudgetInr > 0 ? totalBudgetInr : null,
       departure_date: departureDate || null,
       departure_time: departureTime,
       corridor_radius_km: cornerRadiusKm,
@@ -103,7 +115,7 @@ export default function RoadTripPlannerPage() {
       include_meals: includeMeals,
       dietary_preference: dietary,
       food_preferences: [],
-      meal_budget_per_day_inr: null,
+      meal_budget_per_day_inr: mealBudgetPerDayInr ? Number(mealBudgetPerDayInr) : null,
       max_candidates: 40,
       refresh: false,
     };
@@ -114,14 +126,19 @@ export default function RoadTripPlannerPage() {
     pace,
     budgetTier,
     travellers,
+    travellerType,
+    tripPriority,
     transport,
     days,
+    nights,
+    totalBudgetInr,
     departureDate,
     departureTime,
     cornerRadiusKm,
     maxDetourKm,
     includeMeals,
     dietary,
+    mealBudgetPerDayInr,
   ]);
 
   const sameJourney =
@@ -290,15 +307,20 @@ export default function RoadTripPlannerPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
-                Days ({days})
-              </label>
+              <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider text-slate-400">
+                <span>Days ({days})</span>
+                <span className="text-amber-400/80">{nights} {nights === 1 ? "night" : "nights"}</span>
+              </div>
               <input
                 type="range"
                 min={1}
                 max={14}
                 value={days}
-                onChange={(e) => setDays(Number(e.target.value))}
+                onChange={(e) => {
+                  const d = Number(e.target.value);
+                  setDays(d);
+                  setNights(Math.max(0, d - 1));
+                }}
                 className="w-full accent-amber-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
               />
             </div>
@@ -318,6 +340,33 @@ export default function RoadTripPlannerPage() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">Traveller Group</label>
+              <select
+                value={travellerType}
+                onChange={(e) => setTravellerType(e.target.value as TravellerType)}
+                className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none"
+              >
+                <option value="solo">Solo traveller</option>
+                <option value="couple">Couple</option>
+                <option value="family">Family (kids friendly)</option>
+                <option value="group">Group of friends</option>
+                <option value="senior">Senior citizens</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">Priority Goal</label>
+              <select
+                value={tripPriority}
+                onChange={(e) => setTripPriority(e.target.value as TripPriority)}
+                className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none"
+              >
+                <option value="balanced">Balanced itinerary</option>
+                <option value="min_cost">Minimum cost (budget focus)</option>
+                <option value="max_sightseeing">Maximum sightseeing</option>
+                <option value="min_travel_time">Fast route (minimal detour)</option>
+              </select>
+            </div>
             <div className="space-y-1.5">
               <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">Pace</label>
               <div className="flex gap-1.5">
@@ -356,6 +405,9 @@ export default function RoadTripPlannerPage() {
                 ))}
               </div>
             </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">Transport</label>
               <select
@@ -416,7 +468,7 @@ export default function RoadTripPlannerPage() {
             <summary className="cursor-pointer font-mono uppercase tracking-wider text-slate-300">
               Corridor &amp; meal settings
             </summary>
-            <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="space-y-1.5">
                 <span className="text-[11px] font-mono">
                   Corridor width: ±{cornerRadiusKm} km from the road
@@ -445,7 +497,21 @@ export default function RoadTripPlannerPage() {
                   className="w-full accent-amber-400"
                 />
               </div>
-              <label className="flex items-center gap-2 cursor-pointer">
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-mono">
+                  Meal budget (₹/person/day)
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  step={100}
+                  value={mealBudgetPerDayInr}
+                  onChange={(e) => setMealBudgetPerDayInr(e.target.value ? Number(e.target.value) : "")}
+                  placeholder="Auto by tier"
+                  className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none"
+                />
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer mt-5">
                 <input
                   type="checkbox"
                   checked={includeMeals}

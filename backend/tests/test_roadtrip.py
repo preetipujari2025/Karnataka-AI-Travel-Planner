@@ -12,12 +12,16 @@ import copy
 import pytest
 
 from app.schemas import (
+    BudgetTier,
+    DietaryPreference,
     FieldVerification,
     Interest,
     Pace,
     RoadTripPlanRequest,
     RouteDiscoveryRequest,
     TransportPreference,
+    TravellerType,
+    TripPriority,
 )
 from app.services import meal_discovery, places_osm, route_discovery, route_provider
 from app.services.roadtrip_planner import plan_road_trip
@@ -261,7 +265,7 @@ def test_discover_with_mocked_osrm_and_overpass(mocked_providers):
     response = route_discovery.discover_route(_request(refresh=True, dietary_preference="vegetarian"))
     assert response.meal_stops
     assert all("vegetarian" in m.dietary_tags for m in response.meal_stops)
-    assert all(m.meal_id.startswith("meal:node/") for m in response.meal_stops)
+    assert all(m.meal_id.startswith("meal:") for m in response.meal_stops)
     # Prices were never invented.
     assert all(m.price_status is FieldVerification.unknown for m in response.meal_stops)
 
@@ -355,10 +359,143 @@ def test_meal_discovery_provider_failure_never_invents_names(monkeypatch):
         raise RuntimeError("overpass down")
 
     monkeypatch.setattr(meal_discovery.places_osm, "find_food_stops", boom)
+    monkeypatch.setattr(meal_discovery, "VERIFIED_KARNATAKA_FOOD_STOPS", [])
     geometry = [[12.97, 77.59], [12.30, 76.65]]
     stops, warnings = meal_discovery.discover_meals(geometry, _request())
     assert stops == []
     assert any("invented" in w.lower() or "unavailable" in w.lower() for w in warnings)
+
+
+def test_meal_discovery_uses_verified_stops_when_overpass_fails(monkeypatch):
+    def boom(lat, lng, radius_km, limit=40):
+        raise RuntimeError("overpass down")
+
+    monkeypatch.setattr(meal_discovery.places_osm, "find_food_stops", boom)
+    geometry = [[12.97, 77.59], [12.30, 76.65]]
+    stops, warnings = meal_discovery.discover_meals(geometry, _request())
+    assert len(stops) > 0
+    assert all(s.source_kind == "verified_food_stop" for s in stops)
+    assert all(s.price_status is FieldVerification.unknown for s in stops)
+
+
+def test_six_requested_routes_dynamic_discovery():
+    test_routes = [
+        ("bengaluru", "mysuru"),
+        ("bengaluru", "chikkamagaluru"),
+        ("bengaluru", "belagavi"),
+        ("bengaluru", "hampi"),
+        ("belagavi", "hampi"),
+        ("hampi", "mysuru"),
+    ]
+    for start, destination in test_routes:
+        req = _request(start_city=start, final_destination=destination, days=3)
+        res = route_discovery.discover_route(req)
+        assert res.route.origin.name, f"Origin name missing for {start}->{destination}"
+        assert res.route.destination.name, f"Destination name missing for {start}->{destination}"
+        assert res.route.distance_km > 50, f"Unrealistic distance {res.route.distance_km} for {start}->{destination}"
+        assert len(res.route.geometry) >= 2, f"Invalid geometry for {start}->{destination}"
+        assert len(res.candidates) > 0 or len(res.optional_stops) > 0 or len(res.recommended) > 0
+        for c in res.candidates:
+            assert 0.0 <= c.score <= 100.0
+            assert len(c.reasons) > 0
+            assert 0.0 <= c.progress_fraction <= 1.0
+
+
+def test_trip_priority_scoring_effects():
+    # Compare candidate scores under min_cost, min_travel_time, max_sightseeing vs balanced
+    req_bal = _request(trip_priority=TripPriority.balanced)
+    req_cost = _request(trip_priority=TripPriority.min_cost)
+    req_time = _request(trip_priority=TripPriority.min_travel_time)
+
+    res_bal = route_discovery.discover_route(req_bal)
+    res_cost = route_discovery.discover_route(req_cost)
+    res_time = route_discovery.discover_route(req_time)
+
+    # Free/low-cost stops get a budget priority boost in min_cost
+    low_fee_candidates = [c for c in res_cost.candidates if c.entry_fee_inr == 0 or (c.entry_fee_inr and c.entry_fee_inr <= 50)]
+    if low_fee_candidates:
+        assert any("budget priority: zero or minimal entry fee" in r for r in low_fee_candidates[0].reasons)
+
+    # Stops right along the corridor (<= 5 km) get a time priority boost
+    close_candidates = [c for c in res_time.candidates if c.distance_from_route_km <= 5.0]
+    if close_candidates:
+        assert any("time priority: right along the main corridor" in r for r in close_candidates[0].reasons)
+
+
+def test_traveller_type_scoring_effects():
+    req_senior = _request(traveller_type=TravellerType.senior, interests=[Interest.temples, Interest.heritage])
+    res_senior = route_discovery.discover_route(req_senior)
+
+    spiritual_stops = [
+        c for c in res_senior.candidates
+        if any(cat in {"spiritual", "temples", "heritage", "gardens"} for cat in c.categories)
+    ]
+    if spiritual_stops:
+        assert any("accessible and peaceful for senior travelers" in r for r in spiritual_stops[0].reasons)
+
+
+def test_allow_backtracking_enforcement():
+    discovery = route_discovery.discover_route(_request(days=1, pace=Pace.packed))
+    if len(discovery.candidates) >= 2:
+        # Pick two candidates: first at higher progress, second at lower progress
+        sorted_by_prog = sorted(discovery.candidates, key=lambda c: c.progress_fraction)
+        second = sorted_by_prog[0]   # low progress
+        first = sorted_by_prog[-1]   # high progress
+        if first.progress_fraction - second.progress_fraction > 0.05:
+            # 1. When allow_backtracking=False, stops MUST progress generally forward along the route
+            # Even if caller passes [first, second], planner ensures second (lower progress) is visited first.
+            plan_no_bt = plan_road_trip(RoadTripPlanRequest(
+                discovery=discovery.request.model_copy(update={"allow_backtracking": False, "days": 1}),
+                selected_stop_ids=[first.candidate_id, second.candidate_id],
+            ))
+            scheduled_ids = [
+                item.ref_id for day in plan_no_bt.itinerary for item in day.schedule
+                if item.item_type == "sightseeing"
+            ]
+            if second.candidate_id in scheduled_ids and first.candidate_id in scheduled_ids:
+                assert scheduled_ids.index(second.candidate_id) < scheduled_ids.index(first.candidate_id), (
+                    "Forward progression was not enforced when allow_backtracking=False"
+                )
+
+            # 2. When allow_backtracking=True, caller order [first, second] is preserved allowing backtracking.
+            plan_bt = plan_road_trip(RoadTripPlanRequest(
+                discovery=discovery.request.model_copy(update={"allow_backtracking": True, "days": 1}),
+                selected_stop_ids=[first.candidate_id, second.candidate_id],
+            ))
+            scheduled_bt_ids = [
+                item.ref_id for day in plan_bt.itinerary for item in day.schedule
+                if item.item_type == "sightseeing"
+            ]
+            if second.candidate_id in scheduled_bt_ids and first.candidate_id in scheduled_bt_ids:
+                assert scheduled_bt_ids.index(first.candidate_id) < scheduled_bt_ids.index(second.candidate_id), (
+                    "Caller reverse order was not honored when allow_backtracking=True"
+                )
+
+
+
+def test_roadtrip_budget_invariant_across_modes_and_tiers():
+    discovery = route_discovery.discover_route(_request())
+    for transport in [
+        TransportPreference.private_car,
+        TransportPreference.self_drive,
+        TransportPreference.private_cab,
+        TransportPreference.public_transport,
+    ]:
+        for tier in [BudgetTier.budget, BudgetTier.mid, BudgetTier.luxury]:
+            req = discovery.request.model_copy(
+                update={"transport_preference": transport, "budget_tier": tier}
+            )
+            plan = plan_road_trip(RoadTripPlanRequest(
+                discovery=req,
+                selected_stop_ids=[s.candidate_id for s in discovery.recommended[:2]],
+            ))
+            b = plan.budget
+            expected_sum = (
+                b.stay_food_inr + b.transport_inr + b.detour_transport_inr
+                + b.activities_inr + b.meals_inr
+            )
+            assert b.total_inr == expected_sum, f"Budget invariant failed for {transport}/{tier}: {b.total_inr} != {expected_sum}"
+            assert b.total_inr > 0
 
 
 def test_discovery_cache_roundtrip(tmp_path):
@@ -378,3 +515,4 @@ def test_discovery_cache_roundtrip(tmp_path):
     hit = store.cache_get("k2", db_path=db)
     assert hit and hit["stale"] is True
     assert store.cache_purge_expired(db_path=db) == 1
+

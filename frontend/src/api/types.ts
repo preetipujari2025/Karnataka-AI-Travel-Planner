@@ -318,6 +318,10 @@ export interface RouteDiscoveryRequest {
   travellers: number;
   transport_preference: TransportPreference;
   days: number;
+  nights?: number | null;
+  total_budget_inr?: number | null;
+  traveller_type?: TravellerType;
+  trip_priority?: TripPriority;
   departure_date?: string | null;
   departure_time: string;
   corridor_radius_km: number;
@@ -389,7 +393,7 @@ export interface MealStop {
   dietary_tags: string[];
   recommended: boolean;
   reason: string;
-  source_kind: "openstreetmap" | "curated_destination";
+  source_kind: "openstreetmap" | "curated_destination" | "verified_food_stop";
   verification_status: string;
   source_urls: string[];
   license: string | null;

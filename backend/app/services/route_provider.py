@@ -106,7 +106,7 @@ def fetch_route(
 
 
 def _osrm_url(settings, origin: DestinationRecord, destination: DestinationRecord, alternatives: bool) -> str:
-    points = f"{destination.lng},{destination.lat};{origin.lng},{origin.lat}"
+    points = f"{origin.lng},{origin.lat};{destination.lng},{destination.lat}"
     query = "overview=full&geometries=geojson"
     if alternatives:
         query += "&alternatives=2"

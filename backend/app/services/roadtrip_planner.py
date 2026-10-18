@@ -122,7 +122,8 @@ def plan_road_trip(request: RoadTripPlanRequest) -> RoadTripPlanResponse:
             continue
         selected_meals.append(meal)
 
-    selected.sort(key=lambda s: (s.progress_fraction, s.candidate_id))
+    if not req.allow_backtracking:
+        selected.sort(key=lambda s: (s.progress_fraction, s.candidate_id))
 
     route_km = max(route.distance_km, 0.001)
     minutes_per_km = route.duration_hours * 60.0 / route_km
@@ -168,6 +169,11 @@ def plan_road_trip(request: RoadTripPlanRequest) -> RoadTripPlanResponse:
 
         stops = by_day[day]
         for stop in stops:
+            if not req.allow_backtracking and stop.progress_fraction < cursor_progress - 0.02:
+                rejected.append(_reject(stop, clock, 0, driving, day_max_driving, DAY_END_MIN, reason_extra="stop requires backtracking behind progress already covered along the route"))
+                conflicts.append(f"Day {day}: '{stop.name}' was excluded to prevent backtracking. Enable 'Allow backtracking' if you wish to revisit previous segments.")
+                continue
+
             visit = stop.suggested_visit_minutes or 60
             visit = max(15, min(visit, MAX_VISIT_MIN))
             seg_km = max(0.0, (stop.progress_fraction - cursor_progress)) * route_km
@@ -201,6 +207,8 @@ def plan_road_trip(request: RoadTripPlanRequest) -> RoadTripPlanResponse:
             ))
             clock += visit
             cursor_progress = max(cursor_progress, stop.progress_fraction)
+            if stop.opening_hours:
+                notes.append(f"{stop.name}: opening hours recorded as {stop.opening_hours}.")
             if not stop.detour_measured:
                 notes.append(f"Detour to {stop.name} is a corridor estimate, not provider-measured.")
 

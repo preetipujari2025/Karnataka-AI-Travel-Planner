@@ -9,6 +9,7 @@ import {
   Star,
   ThumbsDown,
   Ticket,
+  Map as MapIcon,
 } from "lucide-react";
 import type {
   DiscoveredStop,
@@ -17,6 +18,7 @@ import type {
   RouteDiscoveryResponse,
 } from "../../api/types";
 import {
+  buildDiscoveryMapStops,
   defaultSelectedMealIds,
   defaultSelectedStopIds,
   groupMealsByDay,
@@ -24,6 +26,8 @@ import {
   verificationLabel,
 } from "../../lib/roadtrip";
 import { formatInr } from "../../lib/format";
+import { getDestinationImage } from "../../lib/destinationAssets";
+import MapView from "../MapView";
 
 interface RouteDiscoveryPanelProps {
   discovery: RouteDiscoveryResponse;
@@ -73,6 +77,8 @@ function StopRow({
   checked: boolean;
   onToggle: () => void;
 }) {
+  const imageUrl = getDestinationImage(stop.ref_id, stop.categories[0]);
+
   return (
     <label
       className={`flex cursor-pointer flex-col gap-2 rounded-xl border p-4 transition ${
@@ -89,6 +95,14 @@ function StopRow({
             onChange={onToggle}
             className="mt-1 h-4 w-4 shrink-0 accent-amber-400"
           />
+          {imageUrl && (
+            <img
+              src={imageUrl}
+              alt={stop.name}
+              className="h-12 w-12 rounded-lg object-cover border border-white/10 shrink-0 hidden sm:block"
+              loading="lazy"
+            />
+          )}
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm font-semibold text-white">{stop.name}</span>
@@ -217,6 +231,24 @@ export default function RouteDiscoveryPanel({
   const selectedStops = new Set(selectedStopIds);
   const selectedMeals = new Set(selectedMealIds);
 
+  const mapStops = useMemo(
+    () => buildDiscoveryMapStops(discovery, selectedStopIds, selectedMealIds),
+    [discovery, selectedStopIds, selectedMealIds]
+  );
+  const routeLegs = useMemo(
+    () => [
+      {
+        day: 1,
+        origin: discovery.route.origin,
+        destination: discovery.route.destination,
+        distance_km: discovery.route.distance_km,
+        duration_hours: discovery.route.duration_hours,
+        transport: "road" as const,
+      },
+    ],
+    [discovery]
+  );
+
   function toggleStop(candidateId: string) {
     const next = new Set(selectedStopIds);
     if (next.has(candidateId)) next.delete(candidateId);
@@ -281,6 +313,26 @@ export default function RouteDiscoveryPanel({
           </ul>
         )}
       </div>
+
+      {/* Route Corridor Map */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h4 className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-amber-400">
+            <MapIcon className="h-4 w-4" /> Route Corridor Map (Road Geometry &amp; Candidate Stops)
+          </h4>
+          <span className="text-[11px] font-mono text-slate-400">
+            {discovery.candidates.length} stops · {discovery.meal_stops.length} meal options
+          </span>
+        </div>
+        <div className="h-[360px] rounded-2xl overflow-hidden border border-white/10">
+          <MapView
+            stops={mapStops}
+            route={routeLegs}
+            geometry={discovery.route.geometry as [number, number][]}
+            geometryVerified={discovery.route.verified}
+          />
+        </div>
+      </section>
 
       {/* Candidate stops grouped by day */}
       <section>

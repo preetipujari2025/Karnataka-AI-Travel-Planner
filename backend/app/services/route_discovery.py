@@ -33,6 +33,8 @@ from app.schemas import (
     RouteDiscoveryResponse,
     RouteInfo,
     BudgetTier,
+    TravellerType,
+    TripPriority,
 )
 from app.data import store
 from app.services import meal_discovery, places_osm, route_provider
@@ -184,6 +186,9 @@ def _pool_osm(geometry: list[list[float]], request: RouteDiscoveryRequest) -> tu
         except Exception as exc:
             failures += 1
             logger.warning("OSM attraction query failed at %.2f: %s", fraction, exc)
+            if failures >= 2 and not pool:
+                logger.info("Aborting remaining Overpass chunks due to repeated upstream failures")
+                break
             continue
         for place in places:
             if place["osm_id"] in seen_ids:
@@ -210,10 +215,10 @@ def _pool_osm(geometry: list[list[float]], request: RouteDiscoveryRequest) -> tu
             })
     if failures:
         warnings.append(
-            f"OpenStreetMap corridor sampling was partial ({failures} of {chunks + 1} queries failed); "
+            f"OpenStreetMap corridor sampling was partial ({failures} of {chunks + 1} queries failed or aborted); "
             "candidate coverage may be lower than reality."
         )
-    if not pool and failures == chunks + 1:
+    if not pool and failures > 0:
         warnings.append(
             "Live attraction discovery was unavailable; candidates are limited to the "
             "local curated catalog and stored attractions."
@@ -315,6 +320,50 @@ def _score_candidate(
     else:
         score -= 5
         reasons.append(f"long visit for a {request.pace.value} pace (-5)")
+
+    # Trip Priority
+    if request.trip_priority == TripPriority.min_cost:
+        if candidate.entry_fee_inr == 0 or (candidate.entry_fee_inr is not None and candidate.entry_fee_inr <= 50):
+            score += 5
+            reasons.append("budget priority: zero or minimal entry fee (+5)")
+        if candidate.detour_km > 20:
+            score -= 5
+            reasons.append("budget priority: long detour increases fuel/transport cost (-5)")
+    elif request.trip_priority == TripPriority.min_travel_time:
+        if candidate.distance_from_route_km <= 5.0:
+            score += 6
+            reasons.append("time priority: right along the main corridor (+6)")
+        elif candidate.detour_km > 25:
+            score -= 6
+            reasons.append("time priority: excessive detour time (-6)")
+    elif request.trip_priority == TripPriority.max_sightseeing:
+        if len(matched) >= 2 or len(candidate.categories) >= 2:
+            score += 5
+            reasons.append("sightseeing priority: rich multi-attraction appeal (+5)")
+        if minutes <= 90:
+            score += 3
+            reasons.append("sightseeing priority: compact visit length fits more stops (+3)")
+
+    # Traveller Type
+    categories = set(raw.get("categories", []))
+    if request.traveller_type == TravellerType.family:
+        if raw.get("record") and getattr(raw["record"], "family_friendly", None) is True:
+            score += 4
+            reasons.append("family-friendly certified stop (+4)")
+        elif categories & {"wildlife", "nature", "heritage", "gardens", "zoo"}:
+            score += 3
+            reasons.append("suitable for family travelers (+3)")
+    elif request.traveller_type == TravellerType.senior:
+        if categories & {"spiritual", "temples", "heritage", "gardens"}:
+            score += 4
+            reasons.append("accessible and peaceful for senior travelers (+4)")
+        if categories & {"adventure", "trekking"}:
+            score -= 6
+            reasons.append("strenuous activity for senior pace (-6)")
+    elif request.traveller_type == TravellerType.solo:
+        if categories & {"photography", "adventure", "culture", "viewpoints"}:
+            score += 3
+            reasons.append("great fit for solo exploration (+3)")
 
     return reasons, round(max(0.0, min(100.0, score)), 1)
 

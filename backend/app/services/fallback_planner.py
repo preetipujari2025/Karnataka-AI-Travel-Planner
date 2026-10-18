@@ -36,14 +36,24 @@ def plan_fallback(request: PlanRequest) -> tuple[str, list[DayPlan], list[RouteL
     Fully deterministic for a given request.
     """
     start = require_destination(request.start_city)
+    final = None
+    if request.final_destination:
+        final = require_destination(request.final_destination)
+        if final.id == start.id:
+            final = None
 
     selected = [item.destination for item in select_destinations(request)]
     if start.id not in {d.id for d in selected}:
         selected.insert(0, start)
+    if final is not None and final.id not in {d.id for d in selected}:
+        selected.append(final)
 
     order = nearest_neighbor_order(selected, start)
+    if final is not None:
+        order = [d for d in order if d.id != final.id] + [final]
+
     nightly_plan = assign_nights(order, request.days, request.pace)
-    legs = build_legs(nightly_plan)
+    legs = build_legs(nightly_plan, request.transport_preference)
     summary, itinerary = build_fallback_itinerary(request, nightly_plan, legs, order)
     return summary, itinerary, legs
 

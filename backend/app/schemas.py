@@ -917,6 +917,18 @@ class RouteDiscoveryRequest(BaseModel):
     travellers: int = Field(default=2, ge=1, le=20)
     transport_preference: TransportPreference = TransportPreference.private_cab
     days: int = Field(default=2, ge=1, le=21)
+    nights: Optional[int] = Field(
+        default=None, ge=0, description="Number of nights for the trip; defaults to max(0, days - 1)"
+    )
+    total_budget_inr: Optional[int] = Field(
+        default=None, ge=100, le=10_000_000, description="Total budget for the trip in INR"
+    )
+    traveller_type: TravellerType = Field(
+        default=TravellerType.couple, description="solo, couple, family, group, or senior"
+    )
+    trip_priority: TripPriority = Field(
+        default=TripPriority.balanced, description="min_cost, max_sightseeing, min_travel_time, or balanced"
+    )
     departure_date: Optional[date] = None
     departure_time: str = Field(default="08:00", description="24h HH:MM")
     corridor_radius_km: float = Field(
@@ -960,7 +972,9 @@ class RouteDiscoveryRequest(BaseModel):
         return f"{h:02d}:{m:02d}"
 
     @model_validator(mode="after")
-    def _origin_differs_from_destination(self) -> "RouteDiscoveryRequest":
+    def _derive_nights_and_validate(self) -> "RouteDiscoveryRequest":
+        if self.nights is None:
+            object.__setattr__(self, "nights", max(0, self.days - 1))
         if self.start_city == self.final_destination:
             raise ValueError("start_city and final_destination must be different places")
         return self
@@ -1031,7 +1045,7 @@ class MealStop(BaseModel):
     dietary_tags: list[str] = Field(default_factory=list, description="Only from source tags")
     recommended: bool = True
     reason: str = ""
-    source_kind: Literal["openstreetmap", "curated_destination"] = "openstreetmap"
+    source_kind: Literal["openstreetmap", "curated_destination", "verified_food_stop"] = "openstreetmap"
     verification_status: str = "discovered"
     source_urls: list[str] = Field(default_factory=list)
     license: Optional[str] = None

@@ -124,3 +124,66 @@ export function buildMapStops(plan: RoadTripPlanResponse): DestinationSummary[] 
   });
   return stops;
 }
+
+/** Converts a discovery result into map markers showing origin, destination, candidate stops and meal stops. */
+export function buildDiscoveryMapStops(
+  discovery: RouteDiscoveryResponse,
+  selectedStopIds: string[] = [],
+  selectedMealIds: string[] = []
+): DestinationSummary[] {
+  const selectedStops = new Set(selectedStopIds);
+  const selectedMeals = new Set(selectedMealIds);
+  const stops: DestinationSummary[] = [
+    {
+      id: discovery.route.origin.destination_id,
+      name: discovery.route.origin.name,
+      region: discovery.route.origin.region || "Origin",
+      lat: discovery.route.origin.lat,
+      lng: discovery.route.origin.lng,
+      categories: ["start"],
+      description: "Trip origin",
+      highlights: [],
+    },
+  ];
+
+  for (const candidate of discovery.candidates) {
+    const isSelected = selectedStops.has(candidate.candidate_id);
+    stops.push({
+      id: candidate.candidate_id,
+      name: candidate.name,
+      region: candidate.segment_label || (isSelected ? "Selected stop" : "Optional stop"),
+      lat: candidate.lat,
+      lng: candidate.lng,
+      categories: isSelected ? ["selected", ...candidate.categories] : ["optional", ...candidate.categories],
+      description: candidate.description ?? "",
+      highlights: candidate.reasons.slice(0, 3),
+    });
+  }
+
+  for (const meal of discovery.meal_stops) {
+    const isSelected = selectedMeals.has(meal.meal_id);
+    stops.push({
+      id: meal.meal_id,
+      name: meal.name,
+      region: `${meal.meal} · Day ${meal.day} (${isSelected ? "Selected" : "Optional"})`,
+      lat: meal.lat,
+      lng: meal.lng,
+      categories: isSelected ? ["food", "selected"] : ["food", "optional"],
+      description: meal.reason,
+      highlights: meal.cuisine_tags,
+    });
+  }
+
+  stops.push({
+    id: discovery.route.destination.destination_id,
+    name: discovery.route.destination.name,
+    region: discovery.route.destination.region || "Destination",
+    lat: discovery.route.destination.lat,
+    lng: discovery.route.destination.lng,
+    categories: ["end"],
+    description: "Trip final destination",
+    highlights: [],
+  });
+
+  return stops;
+}
