@@ -1,4 +1,5 @@
-import { Compass, Clock, MapPin, Sparkles, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { Clock, MapPin, Sparkles, ArrowRight, Compass } from "lucide-react";
 import { CURATED_TRAILS, type TrailTheme } from "../../lib/trailsData";
 
 interface TrailsShowcaseProps {
@@ -6,97 +7,128 @@ interface TrailsShowcaseProps {
 }
 
 export default function TrailsShowcase({ onSelectTrail }: TrailsShowcaseProps) {
+  const [hoveredTrailId, setHoveredTrailId] = useState<string | null>(null);
+
   return (
-    <section id="curated-trails" className="relative py-24 px-4 sm:px-8 max-w-7xl mx-auto">
+    <section id="experiences" className="relative py-20 px-6 sm:px-10 max-w-7xl mx-auto scroll-mt-24">
       {/* Section Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full glass-pill px-3 py-1 text-xs font-semibold text-amber-400 mb-3">
-            <Compass className="h-3.5 w-3.5" />
-            <span className="uppercase tracking-widest text-[10px]">Curated Regional Circuits</span>
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#2d6a4f]/20 bg-[#eaf4ee] px-3.5 py-1 text-xs font-semibold text-[#1e533c] shadow-xs mb-3">
+            <Compass className="h-3.5 w-3.5 text-[#2d6a4f]" />
+            <span className="uppercase tracking-wider text-[11px]">Curated Regional Circuits</span>
           </div>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-white">
-            Signature Karnataka Trails
+          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-[#14231b]">
+            Featured Karnataka Trails
           </h2>
-          <p className="mt-2 text-slate-400 text-sm sm:text-base max-w-2xl font-light">
-            Designed around geological, ecological, and cultural circuits. Pick a signature trail
-            to immediately launch the AI planner pre-configured for that region.
+          <p className="mt-3 text-[#35483d] text-sm sm:text-base max-w-2xl font-normal leading-relaxed">
+            Four iconic landscapes defined by geology, rainforests, and maritime history. Each
+            circuit is calibrated with authentic travel times and zero-hallucination connections.
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-slate-400">
-          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>4 Verified Signature Circuits</span>
+        <div className="flex items-center gap-2 text-xs font-medium text-[#2d6a4f] bg-white/80 px-4 py-2 rounded-xl border border-[#cce0d4] shadow-xs">
+          <span className="h-2 w-2 rounded-full bg-[#2d6a4f] animate-pulse" />
+          <span>4 Verified Signature Trails</span>
         </div>
       </div>
 
-      {/* Grid of Trail Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {CURATED_TRAILS.map((trail) => (
-          <div
-            key={trail.id}
-            className="group relative flex flex-col justify-between overflow-hidden rounded-2xl glass-panel border-white/10 transition-all duration-500 hover:-translate-y-1.5 hover:border-amber-400/40 hover:shadow-2xl hover:shadow-amber-500/10"
-          >
-            {/* Top Visual Imagery */}
-            <div className="relative h-56 w-full overflow-hidden">
-              <img
-                src={trail.image}
-                alt={trail.title}
-                className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#070b12] via-slate-950/40 to-transparent" />
+      {/* Big Image Cards Grid (2x2 or 4-col responsive) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {CURATED_TRAILS.map((trail) => {
+          const isHovered = hoveredTrailId === trail.id;
+          const webpUrl = trail.image.replace(/\.jpg$/, ".webp");
 
-              {/* Days badge */}
-              <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full glass-pill px-2.5 py-1 text-[11px] font-semibold text-amber-300">
-                <Clock className="h-3 w-3" />
-                <span>{trail.durationDays} Days</span>
-              </div>
+          return (
+            <div
+              key={trail.id}
+              onMouseEnter={() => setHoveredTrailId(trail.id)}
+              onMouseLeave={() => setHoveredTrailId(null)}
+              className="group relative flex flex-col justify-between overflow-hidden rounded-3xl glass-panel-elevated border border-[#cbe1d5] shadow-lg transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl hover:border-[#2d6a4f]/40"
+            >
+              {/* Big Visual Imagery with Gentle Parallax Zoom */}
+              <div className="relative h-72 sm:h-80 w-full overflow-hidden bg-[#eef4f0]">
+                <picture>
+                  <source srcSet={webpUrl} type="image/webp" />
+                  <img
+                    src={trail.image}
+                    alt={trail.title}
+                    loading="lazy"
+                    className={`h-full w-full object-cover transition-transform duration-700 ease-out ${
+                      isHovered ? "scale-108 -translate-y-1" : "scale-100"
+                    }`}
+                  />
+                </picture>
 
-              {/* Region Pill */}
-              <div className="absolute bottom-3 left-3 flex items-center gap-1 text-[11px] font-medium text-slate-300">
-                <MapPin className="h-3.5 w-3.5 text-amber-400" />
-                <span>{trail.region}</span>
-              </div>
-            </div>
+                {/* Light bottom gradient overlay to blend into the card */}
+                <div className="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent" />
 
-            {/* Content & Details */}
-            <div className="flex flex-1 flex-col justify-between p-5">
-              <div>
-                <h3 className="font-display text-lg font-bold text-white group-hover:text-amber-300 transition-colors">
-                  {trail.title}
-                </h3>
-                <p className="text-xs font-serif italic text-amber-400/80 mt-0.5">
-                  {trail.subtitle}
-                </p>
-                <p className="mt-2.5 text-xs text-slate-400 leading-relaxed line-clamp-2">
-                  {trail.tagline}
-                </p>
+                {/* Duration Badge */}
+                <div className="absolute top-4 right-4 flex items-center gap-1.5 rounded-full bg-white/90 backdrop-blur-md px-3.5 py-1 text-xs font-semibold text-[#1e533c] border border-[#d2e2d8] shadow-sm">
+                  <Clock className="h-3.5 w-3.5 text-[#2d6a4f]" />
+                  <span>{trail.durationDays} Days</span>
+                </div>
 
-                {/* Highlights tags */}
-                <div className="mt-4 flex flex-wrap gap-1.5">
-                  {trail.highlights.slice(0, 2).map((hl) => (
-                    <span
-                      key={hl}
-                      className="rounded-md border border-white/5 bg-white/5 px-2 py-0.5 text-[10px] text-slate-300"
-                    >
-                      {hl}
-                    </span>
-                  ))}
+                {/* Region Tag */}
+                <div className="absolute bottom-4 left-5 flex items-center gap-1.5 rounded-full bg-white/90 backdrop-blur-md px-3 py-1 text-xs font-medium text-[#263c30] border border-[#d2e2d8] shadow-xs">
+                  <MapPin className="h-3.5 w-3.5 text-[#2d6a4f]" />
+                  <span>{trail.region}</span>
                 </div>
               </div>
 
-              {/* Action Button */}
-              <button
-                type="button"
-                onClick={() => onSelectTrail(trail)}
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-white/5 border border-white/10 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-200 transition-all duration-200 group-hover:bg-gradient-to-r group-hover:from-amber-500 group-hover:to-amber-400 group-hover:text-slate-950 group-hover:border-transparent group-hover:shadow-lg group-hover:shadow-amber-500/20"
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>Configure Itinerary</span>
-                <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
-              </button>
+              {/* Card Body & Highlights */}
+              <div className="flex flex-1 flex-col justify-between p-6 sm:p-7">
+                <div>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="font-serif text-2xl font-normal text-[#14231b] group-hover:text-[#1e533c] transition-colors">
+                        {trail.title}
+                      </h3>
+                      <p className="text-xs font-medium text-[#b45309] mt-0.5">
+                        {trail.subtitle}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-xs font-semibold uppercase tracking-wider text-[#2d6a4f] bg-[#eaf4ee] px-2.5 py-1 rounded-lg border border-[#cbe1d5]">
+                      {trail.budgetTier} class
+                    </span>
+                  </div>
+
+                  <p className="mt-3 text-sm text-[#35483d] leading-relaxed font-normal">
+                    {trail.tagline}
+                  </p>
+
+                  {/* Highlights chips */}
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {trail.highlights.map((hl) => (
+                      <span
+                        key={hl}
+                        className="rounded-lg border border-[#d8e6de] bg-[#f7faf8] px-2.5 py-1 text-[11px] font-medium text-[#263c30]"
+                      >
+                        {hl}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Action CTA */}
+                <div className="mt-6 pt-5 border-t border-[#dce9e1] flex items-center justify-between">
+                  <div className="text-xs text-[#5e7467]">
+                    Starting from <strong className="text-[#14231b] font-semibold capitalize">{trail.startCity}</strong>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => onSelectTrail(trail)}
+                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#f5a623] to-[#e08713] hover:from-[#e59b20] hover:to-[#cb770c] text-white px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition shadow-md shadow-[#e08713]/20 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>Plan This Trail</span>
+                    <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

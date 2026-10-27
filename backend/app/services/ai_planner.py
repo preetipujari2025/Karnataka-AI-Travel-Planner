@@ -11,7 +11,6 @@ from typing import Optional
 import httpx
 
 from app.config import get_settings
-from app.data.loader import all_destinations
 from app.schemas import DayPlan, DestinationRecord, PlanRequest
 from app.services import ai_service
 from app.services.ai_service import (
@@ -25,6 +24,7 @@ from app.services.ai_service import (
     AITimeoutError,
     AIValidationError,
 )
+from app.services.recommendation import find_corridor_candidates
 
 __all__ = [
     "AIGenerationError",
@@ -58,8 +58,7 @@ def generate_ai_plan_full(
         raise AIGenerationError("LLM_API_KEY is not configured")
 
     if candidate_catalog is None:
-        stop_ids = {d.id for d in stops}
-        candidates = [d for d in all_destinations() if d.id not in stop_ids][:6]
+        candidates = find_corridor_candidates(stops, request, limit=6)
     else:
         candidates = candidate_catalog
 

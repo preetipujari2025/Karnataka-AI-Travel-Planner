@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date as dt_date, date
 from enum import Enum
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -68,8 +68,10 @@ class Interest(str, Enum):
     heritage = "heritage"
     nature = "nature"
     beach = "beach"
+    beaches = "beaches"
     adventure = "adventure"
     spirituality = "spirituality"
+    spiritual = "spiritual"
     wildlife = "wildlife"
     food = "food"
     urban = "urban"
@@ -79,6 +81,22 @@ class Interest(str, Enum):
     viewpoints = "viewpoints"
     shopping = "shopping"
     culture = "culture"
+    coffee_hills = "coffee_hills"
+    hills = "hills"
+    coffee = "coffee"
+
+
+class ExperiencePreference(str, Enum):
+    """Traveller's overarching trip style that shapes destination scoring and itinerary rhythm."""
+
+    relaxed = "relaxed"
+    adventure = "adventure"
+    cultural = "cultural"
+    family = "family"
+    solo = "solo"
+    couple = "couple"
+    luxury = "luxury"
+    budget_backpacking = "budget_backpacking"
 
 
 class ActivityKind(str, Enum):
@@ -214,6 +232,9 @@ class DestinationRecord(BaseModel):
     )
     family_friendly: Optional[bool] = None
     accessibility_notes: Optional[str] = None
+    local_dish: Optional[str] = Field(default=None, description="Curated authentic local dish or food specialty")
+    best_time_tip: Optional[str] = Field(default=None, description="Curated seasonal or best-time insider tip")
+    practical_tip: Optional[str] = Field(default=None, description="Curated practical travel advice unique to destination")
     sources: list[str] = Field(default_factory=list, description="Source URLs supporting checkable facts")
     data_confidence: DataConfidence = DataConfidence.unverified
     last_verified_on: Optional[str] = Field(
@@ -301,6 +322,9 @@ class DestinationSummary(BaseModel):
     categories: list[str]
     description: str
     highlights: list[str]
+    local_dish: Optional[str] = None
+    best_time_tip: Optional[str] = None
+    practical_tip: Optional[str] = None
 
 
 class NearbyDestination(BaseModel):
@@ -467,11 +491,104 @@ class TripPreferences(BaseModel):
         default=None, max_length=500, description="Free-text accessibility needs"
     )
     family_preference: Optional[FamilyPreference] = None
+    experience_preference: Optional[ExperiencePreference] = Field(
+        default=None,
+        description=(
+            "Preferred type of experience: relaxed, adventure, cultural, family, "
+            "solo, couple, luxury, budget_backpacking. Directly influences destination scoring & trip profile."
+        ),
+    )
+
+    total_budget_inr: Optional[int] = Field(
+        default=None,
+        ge=100,
+        le=10_000_000,
+        description="Total budget for the whole trip in INR (100 .. 1,00,00,000)",
+    )
+
+    @field_validator("experience_preference", mode="before")
+    @classmethod
+    def _normalise_experience_pref(cls, value: Any) -> Any:
+        if value is None:
+            return None
+        raw = str(getattr(value, "value", value)).strip().lower().replace(" ", "_").replace("-", "_")
+        return raw if raw else None
+
+    @field_validator("interests", mode="before")
+    @classmethod
+    def _normalise_raw_interests(cls, value: Any) -> Any:
+        if not isinstance(value, list):
+            return value
+        normalised = []
+        for item in value:
+            raw = str(getattr(item, "value", item)).strip().lower()
+            if raw in ("coffee/hills", "coffee-hills", "coffee_hills", "hills", "coffee"):
+                normalised.append("coffee_hills")
+            elif raw in ("beaches", "beach"):
+                normalised.append("beaches")
+            elif raw in ("spiritual", "spirituality"):
+                normalised.append("spiritual")
+            else:
+                normalised.append(raw)
+        return normalised
 
     @model_validator(mode="after")
     def _derive_nights_and_validate(self) -> "TripPreferences":
         if self.nights is None:
             object.__setattr__(self, "nights", max(0, self.days - 1))
+
+        # Experience preference automatically customizes pace, party, tier and activities
+        if self.experience_preference:
+            pref = self.experience_preference
+            if pref == ExperiencePreference.relaxed:
+                if self.pace == Pace.balanced:
+                    object.__setattr__(self, "pace", Pace.relaxed)
+            elif pref == ExperiencePreference.family:
+                object.__setattr__(self, "traveller_type", TravellerType.family)
+                if self.family_preference is None:
+                    object.__setattr__(self, "family_preference", FamilyPreference.with_children)
+            elif pref == ExperiencePreference.solo:
+                object.__setattr__(self, "traveller_type", TravellerType.solo)
+            elif pref == ExperiencePreference.couple:
+                object.__setattr__(self, "traveller_type", TravellerType.couple)
+            elif pref == ExperiencePreference.luxury:
+                object.__setattr__(self, "budget_tier", BudgetTier.luxury)
+            elif pref == ExperiencePreference.budget_backpacking:
+                object.__setattr__(self, "budget_tier", BudgetTier.budget)
+                if self.transport_preference == TransportPreference.any:
+                    object.__setattr__(self, "transport_preference", TransportPreference.public_transport)
+            elif pref == ExperiencePreference.adventure:
+                exps = list(self.experience_types)
+                for et in [ExperienceType.trekking, ExperienceType.wildlife_safari, ExperienceType.boating]:
+                    if et not in exps:
+                        exps.append(et)
+                object.__setattr__(self, "experience_types", exps)
+            elif pref == ExperiencePreference.cultural:
+                exps = list(self.experience_types)
+                for et in [ExperienceType.heritage_tour, ExperienceType.pilgrimage]:
+                    if et not in exps:
+                        exps.append(et)
+                object.__setattr__(self, "experience_types", exps)
+
+        # Budget-driven adjustments: if user specifies a real INR budget, adapt tier/transport
+        # when not explicitly forced, ensuring lower rupee budgets produce cheaper plans.
+        if self.total_budget_inr is not None and self.days > 0 and self.travellers > 0:
+            daily_per_person = self.total_budget_inr / (self.days * self.travellers)
+            if self.experience_preference not in (ExperiencePreference.luxury, ExperiencePreference.budget_backpacking):
+                if daily_per_person <= 2500:
+                    object.__setattr__(self, "budget_tier", BudgetTier.budget)
+                    if self.transport_preference == TransportPreference.any:
+                        object.__setattr__(self, "transport_preference", TransportPreference.public_transport)
+                elif daily_per_person >= 7000:
+                    object.__setattr__(self, "budget_tier", BudgetTier.luxury)
+                    if self.transport_preference == TransportPreference.any:
+                        object.__setattr__(self, "transport_preference", TransportPreference.private_car)
+                else:
+                    object.__setattr__(self, "budget_tier", BudgetTier.mid)
+            elif self.experience_preference == ExperiencePreference.luxury:
+                if daily_per_person < 6800:
+                    object.__setattr__(self, "budget_tier", BudgetTier.mid)
+
         return self
 
     @field_validator("interests")
@@ -597,6 +714,7 @@ class TripChanges(BaseModel):
     food_preferences: Optional[list[str]] = None
     meal_budget_per_day_inr: Optional[int] = Field(default=None, ge=100)
     trip_priority: Optional[TripPriority] = None
+    experience_preference: Optional[ExperiencePreference] = None
 
 
 # ---------------------------------------------------------------------------
@@ -636,6 +754,24 @@ class DayPlan(BaseModel):
     )
     narrative: Optional[str] = Field(
         default=None, description="Personalized day narrative or theme"
+    )
+    morning_plan: Optional[str] = Field(
+        default=None, description="Morning activity / exploration plan"
+    )
+    afternoon_plan: Optional[str] = Field(
+        default=None, description="Afternoon sightseeing / cultural plan"
+    )
+    evening_plan: Optional[str] = Field(
+        default=None, description="Evening leisure / scenic / dining plan"
+    )
+    travel_time: Optional[str] = Field(
+        default=None, description="Travel time between stops or local transit time"
+    )
+    food_suggestion: Optional[str] = Field(
+        default=None, description="Authentic regional dish or dining recommendation"
+    )
+    local_tip: Optional[str] = Field(
+        default=None, description="Insider local advice and practical tips"
     )
     activities: list[DayActivity]
     travel_tips: list[str] = Field(
@@ -680,6 +816,8 @@ class BudgetBreakdown(BaseModel):
     days: int
     travellers: int
     stay_food_inr: int = Field(description="Accommodation, food and local transport, all travellers")
+    stay_inr: int = Field(default=0, description="Accommodation portion in INR")
+    food_inr: int = Field(default=0, description="Dining and food portion in INR")
     transport_inr: int = Field(description="Intercity travel between stops, all travellers")
     activities_inr: int = Field(
         description=(
@@ -687,6 +825,8 @@ class BudgetBreakdown(BaseModel):
             "excluded, not counted as zero — see unknown_entry_fees."
         )
     )
+    entry_fees_inr: int = Field(default=0, description="Verified sight and attraction entry fees in INR")
+    extra_inr: int = Field(default=0, description="Incidental buffer and local activities in INR")
     total_inr: int = Field(ge=0)
     per_person_total_inr: int = Field(ge=0)
     # --- transparency: unknown fees are never silently summed as zero -------
@@ -755,6 +895,10 @@ class SuggestedSubstitution(BaseModel):
 class PlanResponse(BaseModel):
     plan_id: str
     source: Literal["ai", "fallback"]
+    planner_label: str = Field(
+        default="Smart planner",
+        description="Display label indicating planning engine: 'AI-personalized' or 'Smart planner'",
+    )
     summary: str
     interests: list[Interest]
     itinerary: list[DayPlan]
@@ -785,6 +929,24 @@ class PlanResponse(BaseModel):
         default=None,
         description="Name of AI provider used when source is 'ai'",
     )
+    why_this_plan: Optional[str] = Field(
+        default=None,
+        description="Personalized note explaining why this itinerary suits the traveller's interests and budget",
+    )
+    duration_interest_advice: Optional[str] = Field(
+        default=None,
+        description="Polite advice when trip duration is too short for chosen interests, suggesting what to drop",
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def set_default_planner_label(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if not data.get("planner_label"):
+                data["planner_label"] = (
+                    "AI-personalized" if data.get("source") == "ai" else "Smart planner"
+                )
+        return data
 
 
 class RegenerateItineraryRequest(BaseModel):
@@ -929,7 +1091,7 @@ class RouteDiscoveryRequest(BaseModel):
     trip_priority: TripPriority = Field(
         default=TripPriority.balanced, description="min_cost, max_sightseeing, min_travel_time, or balanced"
     )
-    departure_date: Optional[date] = None
+    departure_date: Optional[dt_date] = None
     departure_time: str = Field(default="08:00", description="24h HH:MM")
     corridor_radius_km: float = Field(
         default=DEFAULT_CORRIDOR_RADIUS_KM, gt=1, le=150, description="Half-width of the search corridor"
@@ -1084,7 +1246,7 @@ class ScheduledItem(BaseModel):
 
 class RoadTripDay(BaseModel):
     day: int = Field(ge=1)
-    date: Optional[date] = None
+    date: Optional[dt_date] = None
     title: Optional[str] = None
     overnight_place: Place
     driving_minutes: int = Field(ge=0)

@@ -11,8 +11,10 @@ export type Interest =
   | "heritage"
   | "nature"
   | "beach"
+  | "beaches"
   | "adventure"
   | "spirituality"
+  | "spiritual"
   | "wildlife"
   | "food"
   | "urban"
@@ -21,7 +23,20 @@ export type Interest =
   | "waterfalls"
   | "viewpoints"
   | "shopping"
-  | "culture";
+  | "culture"
+  | "coffee_hills"
+  | "hills"
+  | "coffee";
+
+export type ExperiencePreference =
+  | "relaxed"
+  | "adventure"
+  | "cultural"
+  | "family"
+  | "solo"
+  | "couple"
+  | "luxury"
+  | "budget_backpacking";
 
 export type TravellerType = "solo" | "couple" | "family" | "group" | "senior";
 export type TripPriority = "balanced" | "min_cost" | "max_sightseeing" | "min_travel_time";
@@ -108,6 +123,8 @@ export interface PlanRequest {
   start_city: string;
   start_month: number | null;
   planner: PlannerMode;
+  total_budget_inr?: number | null;
+  experience_preference?: ExperiencePreference;
 }
 
 export interface Place {
@@ -135,6 +152,12 @@ export interface DayPlan {
   stay_days: number;
   day_title?: string | null;
   narrative?: string | null;
+  morning_plan?: string | null;
+  afternoon_plan?: string | null;
+  evening_plan?: string | null;
+  travel_time?: string | null;
+  food_suggestion?: string | null;
+  local_tip?: string | null;
   activities: DayActivity[];
   travel_tips?: string[];
 }
@@ -163,9 +186,13 @@ export interface BudgetBreakdown {
   days: number;
   travellers: number;
   stay_food_inr: number;
+  stay_inr?: number;
+  food_inr?: number;
   transport_inr: number;
   /** Verified entry fees only — unknown fees are excluded, not counted as zero. */
   activities_inr: number;
+  entry_fees_inr?: number;
+  extra_inr?: number;
   total_inr: number;
   per_person_total_inr: number;
   /** Stops whose entry fee is unverified and EXCLUDED from activities_inr. */
@@ -203,6 +230,7 @@ export interface SuggestedSubstitution {
 export interface PlanResponse {
   plan_id: string;
   source: "ai" | "fallback";
+  planner_label?: string;
   summary: string;
   interests: Interest[];
   itinerary: DayPlan[];
@@ -216,6 +244,8 @@ export interface PlanResponse {
   practical_tips?: string[];
   suggested_substitutions?: SuggestedSubstitution[];
   ai_provider?: string | null;
+  why_this_plan?: string | null;
+  duration_interest_advice?: string | null;
 }
 
 export type TransportPreference =
@@ -272,6 +302,7 @@ export interface TripChanges {
   food_preferences?: string[];
   meal_budget_per_day_inr?: number | null;
   trip_priority?: TripPriority;
+  experience_preference?: ExperiencePreference;
 }
 
 export interface RegenerateItineraryRequest {

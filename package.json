@@ -1,0 +1,17 @@
+{
+  "name": "karnataka-ai-travel-planner",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI Travel Planner for Karnataka",
+  "scripts": {
+    "dev": "node scripts/start-all.js",
+    "dev:all": "node scripts/start-all.js",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "cd backend && .\\.venv\\Scripts\\uvicorn.exe app.main:app --reload --port 8000",
+    "build": "npm --prefix frontend run build",
+    "test": "npm --prefix frontend test",
+    "test:backend": "cd backend && .\\.venv\\Scripts\\pytest.exe",
+    "test:all": "npm --prefix frontend test && cd backend && .\\.venv\\Scripts\\pytest.exe",
+    "typecheck": "npm --prefix frontend run typecheck"
+  }
+}

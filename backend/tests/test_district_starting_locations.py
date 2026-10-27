@@ -63,10 +63,15 @@ def test_every_district_generates_valid_itinerary(district) -> None:
     assert plan is not None
     assert plan.plan_id
     assert len(plan.itinerary) == 3
-    # First day must be anchored in the chosen start city
+    # First day must be anchored in the chosen start city or its district hub
     first_day = plan.itinerary[0]
     assert first_day.day == 1
-    assert first_day.place.destination_id == district.id or district.id in first_day.place.destination_id
+    aliases_lower = [a.lower() for a in district.aliases]
+    assert (
+        first_day.place.destination_id == district.id
+        or district.id in first_day.place.destination_id
+        or first_day.place.destination_id in aliases_lower
+    )
 
     # Budget must be calculated and greater than 0
     assert plan.budget.total_inr > 0

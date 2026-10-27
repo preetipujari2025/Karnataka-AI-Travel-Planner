@@ -2,9 +2,29 @@
 
 @layer base {
   :root {
-    --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+    --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-serif: "Playfair Display", Georgia, serif;
-    --font-display: "Cinzel", Georgia, serif;
+    --font-display: "Playfair Display", Georgia, serif;
+
+    /* Base Palette (warm, pale, light, never dark) */
+    --color-bg-base: #FFFBF2; /* warm ivory */
+    --color-bg-ivory: #FFFBF2;
+    --color-bg-peach: #FDEBD8; /* soft peach */
+    --color-bg-sky: #E6F1F7;   /* pale sky */
+
+    /* WCAG AA text */
+    --color-text-primary: #1B2B27; /* deep green-grey */
+    --color-text-secondary: #2C3E38;
+    --color-text-muted: #536B63;
+
+    /* Accents */
+    --color-saffron: #F2A93B;       /* Karnataka saffron / marigold */
+    --color-saffron-hover: #D98C1E;
+    --color-kumkum: #C8473D;        /* kumkum red (small touches) */
+    --color-peacock: #1F7A7A;       /* peacock teal */
+    --color-peacock-hover: #166060;
+    --color-tea: #2D6A4F;           /* tea-leaf green */
+    --color-tea-hover: #1E4D38;
   }
 
   html,
@@ -12,8 +32,8 @@
   #root {
     min-height: 100%;
     font-family: var(--font-sans);
-    background-color: #070b12;
-    color: #e2e8f0;
+    background-color: #FFFBF2;
+    color: #1B2B27;
   }
 
   /* Custom subtle scrollbar */
@@ -22,71 +42,66 @@
     height: 8px;
   }
   ::-webkit-scrollbar-track {
-    background: #070b12;
+    background: #FFFBF2;
   }
   ::-webkit-scrollbar-thumb {
-    background: #1e293b;
+    background: #E8DCCB;
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #334155;
+    background: #D4C3AC;
   }
 }
 
-/* Glassmorphism & Cinematic Visual Utilities */
+/* Glassmorphism & Refined Editorial Utilities */
 .glass-panel {
-  background: rgba(15, 23, 42, 0.72);
+  background: rgba(255, 251, 242, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(242, 169, 59, 0.2);
+  box-shadow: 0 10px 30px -10px rgba(27, 43, 39, 0.06), 0 1px 3px 0 rgba(0, 0, 0, 0.02);
 }
 
 .glass-panel-elevated {
-  background: rgba(17, 24, 39, 0.85);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(242, 169, 59, 0.3);
+  box-shadow: 0 20px 40px -15px rgba(27, 43, 39, 0.08), 0 2px 6px 0 rgba(0, 0, 0, 0.03);
 }
 
 .glass-pill {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(242, 169, 59, 0.25);
+  box-shadow: 0 2px 8px -2px rgba(27, 43, 39, 0.05);
 }
 
-.gold-gradient-text {
-  background: linear-gradient(135deg, #fef08a 0%, #f59e0b 50%, #d97706 100%);
+.saffron-gradient-text {
+  background: linear-gradient(135deg, #F2A93B 0%, #D98C1E 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.emerald-gradient-text {
-  background: linear-gradient(135deg, #a7f3d0 0%, #34d399 50%, #059669 100%);
+.peacock-gradient-text {
+  background: linear-gradient(135deg, #1F7A7A 0%, #2D6A4F 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.cinematic-vignette {
-  background: radial-gradient(circle at center, transparent 30%, rgba(7, 11, 18, 0.85) 100%);
-}
-
-.hero-gradient-overlay {
-  background: linear-gradient(
-    180deg,
-    rgba(7, 11, 18, 0.35) 0%,
-    rgba(7, 11, 18, 0.65) 60%,
-    #070b12 100%
-  );
+.tea-gradient-text {
+  background: linear-gradient(135deg, #2D6A4F 0%, #1E4D38 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* Leaflet Container & Markers */
 .leaflet-container {
   height: 100%;
   width: 100%;
-  border-radius: 0.75rem;
-  background-color: #0b1120 !important;
+  border-radius: 1rem;
+  background-color: #F8F5EE !important;
 }
 
 .stop-marker-custom {
@@ -96,12 +111,12 @@
   width: 2rem;
   height: 2rem;
   border-radius: 9999px;
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: #070b12;
+  background: linear-gradient(135deg, #F2A93B, #D98C1E);
+  color: #ffffff;
   font-size: 0.825rem;
-  font-weight: 800;
+  font-weight: 700;
   border: 2px solid #ffffff;
-  box-shadow: 0 0 15px rgba(245, 158, 11, 0.5), 0 2px 5px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 4px 12px rgba(217, 140, 30, 0.35);
 }
 
 .font-display {
@@ -112,16 +127,11 @@
   font-family: var(--font-serif);
 }
 
-/* Dark theme filter for OpenStreetMap tiles without watermark */
-.dark-leaflet-tiles .leaflet-tile-pane {
-  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3);
-}
-
 /* Print Media Styles */
 @media print {
   body, #root {
     background-color: #ffffff !important;
-    color: #0f172a !important;
+    color: #1B2B27 !important;
   }
   nav, footer, #btn-adjust-constraints, #btn-download-pdf-top, #btn-download-pdf-bottom {
     display: none !important;

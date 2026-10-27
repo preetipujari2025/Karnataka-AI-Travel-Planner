@@ -1,57 +1,89 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchHealth, fetchMeta, createPlan } from "../api/client";
-import type { HealthResponse, MetaResponse, PlanRequest, PlanResponse } from "../api/types";
+import { fetchHealth, generateItinerary } from "../api/client";
+import type { HealthResponse, PlanRequest, GenerateItineraryResponse, TripRequest } from "../api/types";
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
 import HeroSection from "../components/hero/HeroSection";
-import JourneyShowcase, { type JourneyArchetype } from "../components/home/JourneyShowcase";
-import DestinationDiscovery, { type FeaturedDestination } from "../components/home/DestinationDiscovery";
-import AIPlanningIntro from "../components/home/AIPlanningIntro";
-import PlannerForm, { DEFAULT_REQUEST } from "../components/planner/PlannerForm";
-import ItineraryView from "../components/ItineraryView";
+import QuickPlannerSection from "../components/home/QuickPlannerSection";
+import TrailsShowcase from "../components/trails/TrailsShowcase";
+import SeasonalHighlights from "../components/home/SeasonalHighlights";
 import DestinationExplorer from "../components/destinations/DestinationExplorer";
-import { AlertCircle, Compass, Sparkles, ArrowRight } from "lucide-react";
+import AIPlanningIntro from "../components/home/AIPlanningIntro";
+import SampleItineraryCard from "../components/home/SampleItineraryCard";
+import ItineraryView from "../components/ItineraryView";
+import { AlertCircle } from "lucide-react";
+import type { TrailTheme } from "../lib/trailsData";
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const [meta, setMeta] = useState<MetaResponse | null>(null);
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [request, setRequest] = useState<PlanRequest>(DEFAULT_REQUEST);
-  const [plan, setPlan] = useState<PlanResponse | null>(null);
+  const [plan, setPlan] = useState<GenerateItineraryResponse | null>(null);
   const [planning, setPlanning] = useState(false);
   const [planError, setPlanError] = useState<string | null>(null);
+  const [lastRequest, setLastRequest] = useState<PlanRequest | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
+
+  function checkHealth() {
+    setIsRetrying(true);
+    fetchHealth()
+      .then((data) => {
+        setHealth(data);
+        setLoadError(null);
+      })
+      .catch((error: Error) => {
+        setHealth(null);
+        setLoadError(error.message);
+      })
+      .finally(() => {
+        setIsRetrying(false);
+      });
+  }
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchMeta(controller.signal)
-      .then(setMeta)
-      .catch((error: Error) => {
-        if (!controller.signal.aborted) setLoadError(error.message);
-      });
     fetchHealth(controller.signal)
       .then(setHealth)
-      .catch(() => setHealth(null));
+      .catch((error: Error) => {
+        if (!controller.signal.aborted) {
+          setHealth(null);
+          setLoadError(error.message);
+        }
+      });
     return () => controller.abort();
   }, []);
 
-  async function handlePlan(event: React.FormEvent) {
-    event.preventDefault();
+  async function handleQuickPlan(req: PlanRequest) {
     setPlanning(true);
     setPlanError(null);
+    setLastRequest(req);
     try {
-      const response = await createPlan(request);
+      const response = await generateItinerary(req as TripRequest);
       setPlan(response);
       setTimeout(() => {
-        const resultsEl = document.getElementById("plan-results");
+        const resultsEl = document.getElementById("home-plan-results");
         if (resultsEl) {
           resultsEl.scrollIntoView({ behavior: "smooth" });
         }
       }, 100);
     } catch (error) {
-      setPlan(null);
-      setPlanError((error as Error).message);
+      try {
+        const fallbackResponse = await generateItinerary({
+          ...(req as TripRequest),
+          planner: "fallback",
+        });
+        setPlan(fallbackResponse);
+        setTimeout(() => {
+          const resultsEl = document.getElementById("home-plan-results");
+          if (resultsEl) {
+            resultsEl.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 100);
+      } catch (fallbackErr) {
+        setPlan(null);
+        setPlanError((fallbackErr as Error).message);
+      }
     } finally {
       setPlanning(false);
     }
@@ -64,22 +96,14 @@ export default function HomePage() {
     }
   }
 
-  function handleSelectJourney(journey: JourneyArchetype) {
+  function handleSelectTrail(trail: TrailTheme) {
     navigate("/plan", {
       state: {
-        days: journey.durationDays,
-        interests: journey.interests,
-        budget_tier: journey.budgetTier,
-        pace: journey.pace,
-        start_city: journey.startCity,
-      },
-    });
-  }
-
-  function handleSelectFeaturedDestination(dest: FeaturedDestination) {
-    navigate("/plan", {
-      state: {
-        start_city: dest.cityHubId,
+        days: trail.durationDays,
+        interests: trail.interests,
+        budget_tier: trail.budgetTier,
+        pace: trail.pace,
+        start_city: trail.startCity,
       },
     });
   }
@@ -93,8 +117,8 @@ export default function HomePage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-[#070b12] text-slate-100 flex flex-col justify-between selection:bg-amber-500/30 selection:text-amber-200">
-      {/* Section A: Navigation */}
+    <div className="relative min-h-screen bg-[#FFFBF2] text-[#1B2B27] flex flex-col justify-between selection:bg-[#F2A93B]/25 selection:text-[#1B2B27]">
+      {/* Navigation */}
       <Navbar
         health={health}
         onNavigateToDestinations={() => scrollToSection("destinations-archive")}
@@ -103,111 +127,89 @@ export default function HomePage() {
         onNavigateToAbout={() => scrollToSection("about")}
       />
 
-      {/* Section B: Hero Section */}
-      <HeroSection
-        onCreateItinerary={() => navigate("/plan")}
-        onExploreKarnataka={() => scrollToSection("experiences")}
-      />
-
-      {/* Section C: Second Cinematic Section — Journey Archetypes */}
-      <JourneyShowcase onSelectJourney={handleSelectJourney} />
-
-      {/* Section D: Destination Discovery — Large Visual Destination Cards */}
-      <DestinationDiscovery
-        onSelectDestination={handleSelectFeaturedDestination}
-        onExploreAll={() => scrollToSection("destinations-archive")}
-      />
-
-      {/* Section E: AI Planning Introduction & Interactive Planner Callout */}
-      <section id="planner" className="relative py-28 px-6 sm:px-10 max-w-7xl mx-auto w-full scroll-mt-20">
-        <AIPlanningIntro />
-
-        {/* Guided Builder Banner CTA */}
-        <div className="mb-12 rounded-2xl border border-amber-400/30 bg-gradient-to-r from-amber-500/15 via-amber-400/5 to-transparent p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-amber-400 mb-2">
-              <Sparkles className="h-4 w-4" />
-              <span>Dedicated Guided Journey Builder</span>
-            </div>
-            <h3 className="font-serif text-2xl sm:text-3xl font-normal text-white">
-              Launch the Interactive Karnataka Trip Planner
-            </h3>
-            <p className="mt-2 text-sm text-slate-300 font-light max-w-xl">
-              Prefer a guided step-by-step experience? Select your starting hub, precise calendar
-              dates, travel party, specific INR budget, and transport style.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => navigate("/plan")}
-            className="shrink-0 flex items-center gap-3 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 px-7 py-3.5 text-xs font-bold uppercase tracking-wider transition-all duration-200 shadow-xl shadow-amber-400/20 hover:scale-[1.02]"
-          >
-            <span>Open Guided Builder</span>
-            <ArrowRight className="h-4 w-4" />
-          </button>
-        </div>
+      <main className="flex-1 w-full">
+        {/* 1. Split Hero Section (Premium Editorial Split Layout with Moving Car) */}
+        <HeroSection
+          onCreateItinerary={() => navigate("/plan")}
+          onExploreKarnataka={() => scrollToSection("quick-planner")}
+        />
 
         {/* Load Error Alert if backend unreachable */}
         {loadError && (
-          <div className="mb-8 rounded-xl border border-red-500/30 bg-red-950/40 p-4 text-xs text-red-200 flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-red-400 shrink-0" />
-            <span>
-              Could not connect to FastAPI metadata ({loadError}). Ensure backend is active on :8000.
-            </span>
+          <div className="max-w-7xl mx-auto px-6 sm:px-10 mt-6">
+            <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
+                <span>
+                  Backend service is currently offline ({loadError}). Offline deterministic mode with verified destinations is active.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={checkHealth}
+                disabled={isRetrying}
+                className="rounded-xl bg-[#2d6a4f] text-white px-3.5 py-1.5 text-xs font-semibold hover:bg-[#1e533c] transition shrink-0 cursor-pointer disabled:opacity-50"
+              >
+                {isRetrying ? "Retrying..." : "Try again"}
+              </button>
+            </div>
           </div>
         )}
 
-        {/* Working Quick Planner & Results */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          <div className="lg:col-span-5 w-full">
-            <PlannerForm
-              meta={meta}
-              value={request}
-              onChange={setRequest}
-              onSubmit={handlePlan}
-              planning={planning}
-            />
-          </div>
+        {/* 2. "Plan in 30 seconds" Quick Planner */}
+        <QuickPlannerSection
+          onQuickGenerate={handleQuickPlan}
+          isPlanning={planning}
+        />
 
-          <div className="lg:col-span-7 w-full flex flex-col gap-6">
+        {/* Dynamic Plan Results Container (if user generated directly from Quick Planner) */}
+        {(plan || planError) && (
+          <section id="home-plan-results" className="py-10 px-6 sm:px-10 max-w-7xl mx-auto w-full scroll-mt-24">
             {planError && (
-              <div className="rounded-xl border border-red-500/30 bg-red-950/40 p-5 text-sm text-red-200 flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-900 flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-bold block">Planning Generation Notice</span>
-                  <span className="text-xs text-red-300 mt-1 block">{planError}</span>
+                  <span className="font-semibold block">Planning Notice</span>
+                  <span className="text-xs text-red-700 mt-1 block">{planError}</span>
                 </div>
               </div>
             )}
 
-            {!plan && !planError && (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-white/10 bg-[#0a0f18] p-12 sm:p-16 text-center">
-                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/5 text-amber-400 mb-5">
-                  <Compass className="h-7 w-7" />
+            {plan && (
+              <div className="space-y-6">
+                <div className="text-center max-w-2xl mx-auto mb-6">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#2d6a4f]">Generated Itinerary</span>
+                  <h3 className="font-serif text-3xl text-[#14231b] mt-1">Your Custom Karnataka Circuit</h3>
                 </div>
-                <h3 className="font-serif text-2xl font-normal text-white">
-                  Ready to Build Your Itinerary
-                </h3>
-                <p className="mt-3 text-xs sm:text-sm text-slate-300 max-w-md leading-relaxed font-light">
-                  Fine-tune your preferences on the left and select{" "}
-                  <strong className="text-amber-300">"Generate Karnataka Itinerary"</strong>, or
-                  use the guided builder above for concrete travel dates and exact INR budget matching.
-                </p>
+                <ItineraryView
+                  plan={plan}
+                  originalTrip={lastRequest as TripRequest}
+                  onPlanUpdated={setPlan}
+                />
               </div>
             )}
+          </section>
+        )}
 
-            {plan && <ItineraryView plan={plan} />}
-          </div>
-        </div>
-      </section>
+        {/* 3. Featured trails as big image cards with parallax (Hampi heritage, Coorg coffee, Western Ghats waterfalls, Karavali coast) */}
+        <TrailsShowcase onSelectTrail={handleSelectTrail} />
 
-      {/* Complete Verified Destinations Archive */}
-      <DestinationExplorer onSelectStartCity={handleSelectStartCity} />
+        {/* Seasonal Intelligence: "Best time to visit this month", "Trip of the week", "Surprise me" */}
+        <SeasonalHighlights />
 
-      {/* Section F: Footer */}
+        {/* 4. Destination explorer with search and region filters */}
+        <DestinationExplorer onSelectStartCity={handleSelectStartCity} />
+
+        {/* 5. "How it works" in 3 steps */}
+        <AIPlanningIntro />
+
+        {/* 6. Sample itinerary preview card */}
+        <SampleItineraryCard />
+      </main>
+
+      {/* 7. Calm footer */}
       <Footer
-        onNavigateToDestinations={() => scrollToSection("discover")}
+        onNavigateToDestinations={() => scrollToSection("destinations-archive")}
         onNavigateToExperiences={() => scrollToSection("experiences")}
         onNavigateToPlanner={() => navigate("/plan")}
         onNavigateToAbout={() => scrollToSection("about")}

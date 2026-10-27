@@ -383,6 +383,8 @@ def discover_meals(
     stops: list[MealStop] = []
     seen_ids: set[str] = set()
     settings = get_settings()
+    live_osm_enabled = settings.routing_enabled
+    osm_failures = 0
 
     for day in range(1, days + 1):
         day_start = (day - 1) / days
@@ -403,7 +405,7 @@ def discover_meals(
                         candidates.append({**local_stop, "dist_km": dist})
 
             # 2. Check OpenStreetMap Overpass POIs if routing is enabled
-            if settings.routing_enabled:
+            if live_osm_enabled:
                 try:
                     osm_places = places_osm.find_food_stops(lat, lng, _MEAL_RADIUS_KM, limit=15)
                     for place in osm_places:
@@ -413,8 +415,11 @@ def discover_meals(
                             dist = _haversine_point_to_progress(lat, lng, place["lat"], place["lng"])
                             candidates.append({**place, "dist_km": dist})
                 except Exception as exc:
+                    osm_failures += 1
                     logger.debug("Live OSM food query failed for day %d %s: %s", day, meal, exc)
-                    # Do not abort: continue using local verified candidates gracefully
+                    if osm_failures >= 2:
+                        live_osm_enabled = False
+                        logger.info("Aborting subsequent live OSM food queries; continuing with verified directory")
 
             # Sort by proximity to the meal target coordinate
             candidates.sort(key=lambda p: (p.get("dist_km", 999.0), p["name"]))

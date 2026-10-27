@@ -59,7 +59,7 @@ _CATEGORY_ALIASES = {
 }
 
 _STOPS_PER_DAY_BY_PACE = {Pace.relaxed: 2, Pace.balanced: 3, Pace.packed: 4}
-_MEASURED_DETOUR_LIMIT = 10  # road-provider calls per discovery (cost guard)
+_MEASURED_DETOUR_LIMIT = 3  # road-provider calls per discovery (cost & latency guard)
 _ENDPOINT_PROXIMITY_KM = 8.0  # candidates essentially at origin/destination
 
 
@@ -73,11 +73,19 @@ def _cache_key(request: RouteDiscoveryRequest) -> str:
 
 
 def _resolve_place(location_id: str, label: str) -> DestinationRecord:
-    record = get_destination(location_id)
+    clean_id = (location_id or "").strip()
+    if not clean_id:
+        human_label = "Start city" if "start" in label else "Final destination"
+        raise DiscoveryError(f"{human_label} is required. Please choose a Karnataka city, district, or attraction.")
+    record = get_destination(clean_id)
     if record is None:
-        raise DiscoveryError(f"unknown {label} '{location_id}': not in the destination catalog or district directory")
+        human_label = "start city" if "start" in label else "final destination"
+        raise DiscoveryError(
+            f"Unknown {human_label} '{clean_id}'. "
+            "Please select a destination from Karnataka (e.g. Bengaluru, Mysuru, Hampi, Gokarna, Gokak Falls, Bandipur)."
+        )
     if not record.has_usable_coords:
-        raise DiscoveryError(f"{label} '{location_id}' has no coordinates, so no real route can be computed")
+        raise DiscoveryError(f"'{record.name}' does not have geographic coordinates for routing.")
     return record
 
 
@@ -215,13 +223,7 @@ def _pool_osm(geometry: list[list[float]], request: RouteDiscoveryRequest) -> tu
             })
     if failures:
         warnings.append(
-            f"OpenStreetMap corridor sampling was partial ({failures} of {chunks + 1} queries failed or aborted); "
-            "candidate coverage may be lower than reality."
-        )
-    if not pool and failures > 0:
-        warnings.append(
-            "Live attraction discovery was unavailable; candidates are limited to the "
-            "local curated catalog and stored attractions."
+            "We could not load live stops, showing our curated suggestions."
         )
     return pool, warnings
 
@@ -377,7 +379,7 @@ def discover_route(request: RouteDiscoveryRequest) -> RouteDiscoveryResponse:
     origin = _resolve_place(request.start_city, "start_city")
     destination = _resolve_place(request.final_destination, "final_destination")
     if origin.id == destination.id:
-        raise DiscoveryError("start_city and final_destination resolve to the same place")
+        raise DiscoveryError("Start city and final destination cannot be the same place. Please choose two different destinations.")
 
     settings = get_settings()
     cache_key = _cache_key(request)
@@ -439,7 +441,11 @@ def discover_route(request: RouteDiscoveryRequest) -> RouteDiscoveryResponse:
     # --- measured detours for the closest candidates ------------------------
     in_corridor.sort(key=lambda item: (item[1], item[0]["ref_id"]))
     measured: dict[str, tuple[float, float, bool]] = {}
+    detour_failures = 0
     for raw, distance_km, _progress in in_corridor[:_MEASURED_DETOUR_LIMIT]:
+        if detour_failures >= 2:
+            measured[raw["ref_id"]] = (*route_provider.estimated_detour(distance_km), False)
+            continue
         record = raw.get("record") or _synthetic_record(raw["name"], raw["lat"], raw["lng"])
         extra_km, extra_minutes, ok = route_provider.detour_via(
             origin, record, destination, route_info.distance_km, route_info.duration_hours
@@ -447,6 +453,7 @@ def discover_route(request: RouteDiscoveryRequest) -> RouteDiscoveryResponse:
         if ok and extra_km >= 0:
             measured[raw["ref_id"]] = (extra_km, extra_minutes, True)
         else:
+            detour_failures += 1
             measured[raw["ref_id"]] = (*route_provider.estimated_detour(distance_km), False)
 
     candidates: list[DiscoveredStop] = []

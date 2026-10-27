@@ -10,12 +10,30 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      "/api": "http://localhost:8000",
-      "/health": "http://localhost:8000",
+      "/api": {
+        target: "http://127.0.0.1:8000",
+        changeOrigin: true,
+      },
+      "/health": {
+        target: "http://127.0.0.1:8000",
+        changeOrigin: true,
+      },
     },
   },
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          reactVendor: ["react", "react-dom", "react-router-dom"],
+          leaflet: ["leaflet"],
+          pdf: ["jspdf"],
+          icons: ["lucide-react"],
+        },
+      },
+    },
   },
 });

@@ -476,3 +476,30 @@ def test_forced_ai_without_key_is_503_not_fake_success(
     )
     assert response.status_code == 503
     assert response.json()["error"]["code"] == "service_unavailable"
+
+
+def test_short_trip_with_distant_final_destination_never_exceeds_days(
+    client: TestClient,
+) -> None:
+    payload = {
+        "start_city": "bengaluru",
+        "final_destination": "vijayapura",
+        "days": 3,
+        "travellers": 2,
+        "interests": ["heritage", "nature", "adventure"],
+        "pace": "balanced",
+        "budget_tier": "mid",
+        "transport_preference": "any",
+        "planner": "auto",
+        "start_month": 11,
+    }
+    response = client.post("/api/itineraries/generate", json=payload)
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert len(data["selected_destinations"]) <= 3
+    assert data["selected_destinations"][-1]["id"] == "vijayapura"
+    assert len(data["itinerary"]) == 3
+    day_stops = {d["place"]["destination_id"] for d in data["itinerary"]}
+    selected_ids = {d["id"] for d in data["selected_destinations"]}
+    assert day_stops == selected_ids, "Every selected destination must be visited in the itinerary"
+

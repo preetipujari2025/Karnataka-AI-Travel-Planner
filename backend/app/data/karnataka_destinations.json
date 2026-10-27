@@ -9,17 +9,51 @@
       "district": "Bengaluru Urban",
       "lat": 12.97,
       "lng": 77.56,
-      "categories": ["urban", "food"],
-      "interest_tags": ["cafes", "nightlife", "parks", "markets", "museums"],
-      "experience_types": ["sightseeing", "food_tour"],
+      "categories": [
+        "urban",
+        "food"
+      ],
+      "interest_tags": [
+        "cafes",
+        "nightlife",
+        "parks",
+        "markets",
+        "museums"
+      ],
+      "experience_types": [
+        "sightseeing",
+        "food_tour"
+      ],
       "is_start_hub": true,
       "description": "India's garden city and tech capital, known for cafés, breweries, markets and a cosmopolitan food scene.",
-      "highlights": ["Lalbagh Botanical Garden", "Cubbon Park", "Bangalore Palace", "Vidhana Soudha"],
-      "best_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      "highlights": [
+        "Lalbagh Botanical Garden",
+        "Cubbon Park",
+        "Bangalore Palace",
+        "Vidhana Soudha"
+      ],
+      "best_months": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
       "season_note": "October–February is most comfortable; visitable year-round.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 1500, "mid": 4000, "luxury": 10000},
+      "daily_cost_inr": {
+        "budget": 1500,
+        "mid": 4000,
+        "luxury": 10000
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "City destination; no single confirmed main-attraction fee. Individual sites charge separately.",
       "activity_cost_inr": null,
@@ -30,26 +64,64 @@
         "https://en.wikipedia.org/wiki/Bengaluru"
       ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Crispy Benne Masala Dosa and filter coffee at Vidyarthi Bhavan or CTR; Bisi Bele Bath and Akki Rotti with coconut chutney.",
+      "best_time_tip": "Best visited October to February; explore Lalbagh Botanical Garden before 8:00 AM for tranquil walks and morning birdwatching.",
+      "practical_tip": "Use the Namma Metro (Purple & Green lines) to bypass road traffic between central sights; avoid Silk Board and MG Road during peak 5:30–8:00 PM."
     },
     {
       "id": "mysuru",
-      "name": "Mysuru (Mysore)",
+      "name": "Mysuru",
       "region": "South Karnataka",
       "district": "Mysuru",
       "lat": 12.3086,
       "lng": 76.6531,
-      "categories": ["heritage", "urban", "food"],
-      "interest_tags": ["palace", "dasara", "markets", "history"],
-      "experience_types": ["heritage_tour", "sightseeing", "food_tour"],
+      "categories": [
+        "heritage",
+        "urban",
+        "food"
+      ],
+      "interest_tags": [
+        "palace",
+        "dasara",
+        "markets",
+        "history"
+      ],
+      "experience_types": [
+        "heritage_tour",
+        "sightseeing",
+        "food_tour"
+      ],
       "is_start_hub": true,
       "description": "The cultural capital of Karnataka, famous for its illuminated palace, Dasara festivities and traditional markets.",
-      "highlights": ["Mysore Palace", "Chamundi Hill", "Brindavan Gardens", "Devaraja Market"],
-      "best_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      "highlights": [
+        "Mysore Palace",
+        "Chamundi Hill",
+        "Brindavan Gardens",
+        "Devaraja Market"
+      ],
+      "best_months": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
       "season_note": "Year-round; October–March is the most comfortable sightseeing window.",
       "min_nights": 1,
       "typical_nights": 2,
-      "daily_cost_inr": {"budget": 1200, "mid": 3200, "luxury": 8000},
+      "daily_cost_inr": {
+        "budget": 1200,
+        "mid": 3200,
+        "luxury": 8000
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "City destination; Mysore Palace and other site fees were not verified in this data pass.",
       "activity_cost_inr": null,
@@ -60,7 +132,10 @@
         "https://en.wikipedia.org/wiki/Mysore"
       ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Original Mylari butter masala dosa at Hotel Original Vinayaka Mylari; warm Mysore Pak from Guru Sweet Mart; traditional plantain-leaf South Karnataka thali.",
+      "best_time_tip": "Tour Mysore Palace interior around 10:00 AM in natural daylight; witness the grand 100,000-bulb evening palace illumination on Sundays and public holidays (7:00–7:45 PM).",
+      "practical_tip": "Ascend Chamundi Hill before 7:30 AM to beat pilgrimage crowds; pre-book audio guides at the palace south gate."
     },
     {
       "id": "srirangapatna",
@@ -69,25 +144,56 @@
       "district": "Mandya",
       "lat": 12.414,
       "lng": 76.704,
-      "categories": ["heritage", "nature"],
-      "interest_tags": ["fort", "history", "river-island", "monuments"],
-      "experience_types": ["heritage_tour", "sightseeing"],
+      "categories": [
+        "heritage",
+        "nature"
+      ],
+      "interest_tags": [
+        "fort",
+        "history",
+        "river-island",
+        "monuments"
+      ],
+      "experience_types": [
+        "heritage_tour",
+        "sightseeing"
+      ],
       "is_start_hub": false,
       "description": "Island fortress town of Tipu Sultan on the Cauvery, with temples, tombs and gardens close to Mysuru.",
-      "highlights": ["Sriranganathaswamy Temple", "Dariya Daulat Bagh", "Tipu Sultan's Gumbaz"],
-      "best_months": [10, 11, 12, 1, 2, 3],
+      "highlights": [
+        "Sriranganathaswamy Temple",
+        "Dariya Daulat Bagh",
+        "Tipu Sultan's Gumbaz"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
       "season_note": null,
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 1000, "mid": 2600, "luxury": 6500},
+      "daily_cost_inr": {
+        "budget": 1000,
+        "mid": 2600,
+        "luxury": 6500
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Monument fees (e.g. Dariya Daulat) not confirmed as current.",
       "activity_cost_inr": null,
       "family_friendly": true,
       "accessibility_notes": null,
-      "sources": ["https://en.wikipedia.org/wiki/Srirangapatna"],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Srirangapatna"
+      ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Fresh Kaveri river fish fry or Mandya-style Ragi Mudde with Bassaru, accompanied by fresh tender coconut water along the riverbanks.",
+      "best_time_tip": "Visit between September and March; explore Tipu Sultan's Summer Palace (Dariya Daulat Bagh) in the morning when the teakwood frescoes are best illuminated.",
+      "practical_tip": "Hire a certified local ASI guide outside the fort gate for 45 minutes to appreciate Tipu Sultan's rocket launching posts and historic river battle breach points."
     },
     {
       "id": "ranganathittu",
@@ -96,17 +202,47 @@
       "district": "Mandya",
       "lat": 12.4,
       "lng": 76.65,
-      "categories": ["wildlife", "nature"],
-      "interest_tags": ["birding", "river", "boats", "family"],
-      "experience_types": ["boating", "wildlife_safari", "photography"],
+      "categories": [
+        "wildlife",
+        "nature"
+      ],
+      "interest_tags": [
+        "birding",
+        "river",
+        "boats",
+        "family"
+      ],
+      "experience_types": [
+        "boating",
+        "wildlife_safari",
+        "photography"
+      ],
       "is_start_hub": false,
       "description": "Riverine sanctuary on the Cauvery with nesting islands, crocodiles and boat rides — a short detour from Mysuru.",
-      "highlights": ["Boat ride past nesting islands", "Painted storks and ibis colonies", "Riverside watching points"],
-      "best_months": [12, 1, 2, 6, 7, 8, 9, 10, 11],
+      "highlights": [
+        "Boat ride past nesting islands",
+        "Painted storks and ibis colonies",
+        "Riverside watching points"
+      ],
+      "best_months": [
+        12,
+        1,
+        2,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
       "season_note": "December–February for migratory birds; June–November for the nesting season.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 1200, "mid": 3200, "luxury": 8000},
+      "daily_cost_inr": {
+        "budget": 1200,
+        "mid": 3200,
+        "luxury": 8000
+      },
       "entry_fees_inr": 80,
       "entry_fee_note": "Sanctuary entry ₹80 per Indian adult (ticketing site).",
       "activity_cost_inr": 120,
@@ -117,7 +253,10 @@
         "https://tickets.ranganathittu.in/"
       ],
       "data_confidence": "verified",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Packed riverside breakfast with hot Maddur Vada, tender coconut water, and traditional South Indian filter coffee in nearby Srirangapatna.",
+      "best_time_tip": "Peak migratory bird nesting season runs December to April; early morning 8:30 AM boat rides offer calm river currents and optimal bird photography.",
+      "practical_tip": "Opt for the guided forest department rowboat tour with lifejackets; maintain strict silence near the islet nesting trees and crocodile basking rocks."
     },
     {
       "id": "melkote",
@@ -126,17 +265,42 @@
       "district": "Mandya",
       "lat": 12.6594,
       "lng": 76.6483,
-      "categories": ["heritage", "spiritual"],
-      "interest_tags": ["temple", "pilgrimage", "architecture"],
-      "experience_types": ["pilgrimage", "heritage_tour"],
+      "categories": [
+        "heritage",
+        "spiritual"
+      ],
+      "interest_tags": [
+        "temple",
+        "pilgrimage",
+        "architecture"
+      ],
+      "experience_types": [
+        "pilgrimage",
+        "heritage_tour"
+      ],
       "is_start_hub": false,
       "description": "Temple town on a granite hill above the Cauvery plains, known for Cheluvanarayana Swamy and its step tank.",
-      "highlights": ["Cheluvanarayana Swamy Temple", "Kalyani step tank", "Tirumalai Rangaswamy hill"],
-      "best_months": [10, 11, 12, 1, 2, 3],
+      "highlights": [
+        "Cheluvanarayana Swamy Temple",
+        "Kalyani step tank",
+        "Tirumalai Rangaswamy hill"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
       "season_note": "October–March.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 950, "mid": 2500, "luxury": 6500},
+      "daily_cost_inr": {
+        "budget": 950,
+        "mid": 2500,
+        "luxury": 6500
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "No main-attraction fee confirmed.",
       "activity_cost_inr": null,
@@ -147,7 +311,10 @@
         "https://en.wikipedia.org/wiki/Melukote"
       ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Iconic Melkote Puliyogare (tangy tamarind rice spiced with sesame and groundnuts) and sweet Sakkare Pongal from Subbanna Mess.",
+      "best_time_tip": "Climb the 300 rock-cut steps to Yoga Narasimha Temple at sunrise (6:30 AM) to catch the morning breeze and sweeping 360-degree views across the Mandya plains.",
+      "practical_tip": "Purchase genuine GI-tagged Melkote handloom cotton dhotis and sarees directly from the local weavers' cooperative society."
     },
     {
       "id": "bannerghatta",
@@ -156,17 +323,45 @@
       "district": "Bengaluru Urban",
       "lat": 12.8008,
       "lng": 77.5756,
-      "categories": ["wildlife", "nature"],
-      "interest_tags": ["safari", "zoo", "family", "bengaluru-day-trip"],
-      "experience_types": ["wildlife_safari", "nature_walk"],
+      "categories": [
+        "wildlife",
+        "nature"
+      ],
+      "interest_tags": [
+        "safari",
+        "zoo",
+        "family",
+        "bengaluru-day-trip"
+      ],
+      "experience_types": [
+        "wildlife_safari",
+        "nature_walk"
+      ],
       "is_start_hub": false,
       "description": "National park and biological park on Bengaluru's southern edge with safari, zoo and butterfly park.",
-      "highlights": ["Bus safari through animal zones", "Zoo and museum", "Butterfly park"],
-      "best_months": [10, 11, 12, 1, 2, 3, 4, 5],
+      "highlights": [
+        "Bus safari through animal zones",
+        "Zoo and museum",
+        "Butterfly park"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
       "season_note": "October–February for comfortable weather; wildlife sightings can be strong March–May.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 1500, "mid": 4000, "luxury": 10000},
+      "daily_cost_inr": {
+        "budget": 1500,
+        "mid": 4000,
+        "luxury": 10000
+      },
       "entry_fees_inr": 370,
       "entry_fee_note": "Non-AC bus safari incl. zoo: ₹370 weekdays / ₹420 weekends and holidays (official tariff effective 2025-08-01).",
       "activity_cost_inr": null,
@@ -177,7 +372,10 @@
         "https://en.wikipedia.org/wiki/Bannerghatta_National_Park"
       ],
       "data_confidence": "verified",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "South Indian thali, hot masala vada, and refreshing spiced buttermilk available at the forest department eco-canteen.",
+      "best_time_tip": "Visit between October and March on weekdays; arrive by 9:00 AM when ticket counters open to secure first-slot AC safari tickets.",
+      "practical_tip": "Pre-book the Grand Safari combo online to skip the main queue; the 2-hour morning safari offers the highest chance of spotting royal Bengal tigers and lions active."
     },
     {
       "id": "hampi",
@@ -186,17 +384,44 @@
       "district": "Vijayanagara",
       "lat": 15.3344,
       "lng": 76.4622,
-      "categories": ["heritage", "nature"],
-      "interest_tags": ["unesco", "ruins", "archaeology", "boulders", "sunrise"],
-      "experience_types": ["heritage_tour", "sightseeing", "photography"],
+      "categories": [
+        "heritage",
+        "nature"
+      ],
+      "interest_tags": [
+        "unesco",
+        "ruins",
+        "archaeology",
+        "boulders",
+        "sunrise"
+      ],
+      "experience_types": [
+        "heritage_tour",
+        "sightseeing",
+        "photography"
+      ],
       "is_start_hub": false,
       "description": "A UNESCO World Heritage site of boulder-strewn landscapes and the ruined splendour of the Vijayanagara Empire.",
-      "highlights": ["Virupaksha Temple", "Vittala Temple & Stone Chariot", "Hemakuta Hill sunset", "Royal Enclosure"],
-      "best_months": [11, 12, 1, 2],
+      "highlights": [
+        "Virupaksha Temple",
+        "Vittala Temple & Stone Chariot",
+        "Hemakuta Hill sunset",
+        "Royal Enclosure"
+      ],
+      "best_months": [
+        11,
+        12,
+        1,
+        2
+      ],
       "season_note": "November–February; very hot March–May.",
       "min_nights": 2,
       "typical_nights": 2,
-      "daily_cost_inr": {"budget": 1000, "mid": 2800, "luxury": 7500},
+      "daily_cost_inr": {
+        "budget": 1000,
+        "mid": 2800,
+        "luxury": 7500
+      },
       "entry_fees_inr": 40,
       "entry_fee_note": "ASI monument entry ₹40 for Indian adults (ASI/Wikipedia).",
       "activity_cost_inr": null,
@@ -207,7 +432,10 @@
         "https://asi.nic.in/pages/WorldHeritageHampi"
       ],
       "data_confidence": "verified",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Authentic North Karnataka Jolada Rotti meals with Yennegai (spiced stuffed baby brinjal), Shenga peanut chutney, and Mango Tree's special thali.",
+      "best_time_tip": "Visit November to February; climb Matanga Hill at 5:45 AM for sunrise over the boulder landscape, and watch sunset from Hemakuta Hill.",
+      "practical_tip": "Rent a bicycle or moped to navigate the 26 sq km complex; temple sanctums require removing footwear, so wear slip-on walking shoes with socks."
     },
     {
       "id": "badami",
@@ -216,17 +444,41 @@
       "district": "Bagalkot",
       "lat": 15.92,
       "lng": 75.6803,
-      "categories": ["heritage", "nature"],
-      "interest_tags": ["rock-cut-caves", "temples", "lake"],
-      "experience_types": ["heritage_tour", "sightseeing"],
+      "categories": [
+        "heritage",
+        "nature"
+      ],
+      "interest_tags": [
+        "rock-cut-caves",
+        "temples",
+        "lake"
+      ],
+      "experience_types": [
+        "heritage_tour",
+        "sightseeing"
+      ],
       "is_start_hub": false,
       "description": "Rock-cut cave temples of the Chalukyas set above a red sandstone lake, gateway to the Aihole–Pattadakal circuit.",
-      "highlights": ["Badami Cave Temples", "Agastya Lake", "Upper Badami Fort", "Bhutanatha Group"],
-      "best_months": [11, 12, 1, 2],
+      "highlights": [
+        "Badami Cave Temples",
+        "Agastya Lake",
+        "Upper Badami Fort",
+        "Bhutanatha Group"
+      ],
+      "best_months": [
+        11,
+        12,
+        1,
+        2
+      ],
       "season_note": "November–February.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 900, "mid": 2500, "luxury": 6500},
+      "daily_cost_inr": {
+        "budget": 900,
+        "mid": 2500,
+        "luxury": 6500
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Fee not confirmed from a source in this pass.",
       "activity_cost_inr": null,
@@ -237,7 +489,10 @@
         "https://karnatakatourism.org/en/experiences/hampi-aihole-pattadakal-badami"
       ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Traditional Bagalkot Jolada Rotti thali with Yennegai badane, spicy Shenga Hindi (flaxseed/peanut powder), and fresh thick buffalo curd.",
+      "best_time_tip": "Visit Cave Temples at 7:00 AM when the morning golden hour illuminates the sandstone rock-cut carvings across Cave 1 to Cave 4.",
+      "practical_tip": "Walk the scenic circuit around Agastya Lake to Bhootnath Temples before 9:30 AM; watch out for inquisitive monkeys along the canyon cliff steps."
     },
     {
       "id": "aihole",
@@ -246,17 +501,39 @@
       "district": "Bagalkot",
       "lat": 16.0189,
       "lng": 75.8819,
-      "categories": ["heritage"],
-      "interest_tags": ["archaeology", "temples", "ruins"],
-      "experience_types": ["heritage_tour", "sightseeing"],
+      "categories": [
+        "heritage"
+      ],
+      "interest_tags": [
+        "archaeology",
+        "temples",
+        "ruins"
+      ],
+      "experience_types": [
+        "heritage_tour",
+        "sightseeing"
+      ],
       "is_start_hub": false,
       "description": "Open-air museum of early Chalukyan temples and rock-cut shrines on the Malaprabha river.",
-      "highlights": ["Durga temple", "Lad Khan temple", "Ravana Phadi cave"],
-      "best_months": [11, 12, 1, 2],
+      "highlights": [
+        "Durga temple",
+        "Lad Khan temple",
+        "Ravana Phadi cave"
+      ],
+      "best_months": [
+        11,
+        12,
+        1,
+        2
+      ],
       "season_note": "November–February.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 900, "mid": 2400, "luxury": 6500},
+      "daily_cost_inr": {
+        "budget": 900,
+        "mid": 2400,
+        "luxury": 6500
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Fee not confirmed from a source in this pass.",
       "activity_cost_inr": null,
@@ -267,7 +544,10 @@
         "https://karnatakatourism.org/en/experiences/hampi-aihole-pattadakal-badami"
       ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Hot Bagalkot-style Jowar rotti with roasted gram chutney, sprouts usli, and freshly churned country butter.",
+      "best_time_tip": "Best visited October to March; explore the Durga Temple and its unique apsidal colonnade during quiet morning hours (8:00–10:30 AM).",
+      "practical_tip": "Begin at the ASI Archaeological Museum next to Durga Temple for site context on the 120+ 5th-to-8th-century Chalukyan experimental temples."
     },
     {
       "id": "pattadakal",
@@ -276,17 +556,40 @@
       "district": "Bagalkot",
       "lat": 15.9514,
       "lng": 75.8147,
-      "categories": ["heritage"],
-      "interest_tags": ["unesco", "temples", "architecture"],
-      "experience_types": ["heritage_tour", "sightseeing"],
+      "categories": [
+        "heritage"
+      ],
+      "interest_tags": [
+        "unesco",
+        "temples",
+        "architecture"
+      ],
+      "experience_types": [
+        "heritage_tour",
+        "sightseeing"
+      ],
       "is_start_hub": false,
       "description": "UNESCO-listed cluster of Chalukyan temples blending northern and southern Indian temple styles.",
-      "highlights": ["Papanatha Temple", "Virupaksha Temple", "Kailasa Temple", "Archaeological Museum"],
-      "best_months": [11, 12, 1, 2],
+      "highlights": [
+        "Papanatha Temple",
+        "Virupaksha Temple",
+        "Kailasa Temple",
+        "Archaeological Museum"
+      ],
+      "best_months": [
+        11,
+        12,
+        1,
+        2
+      ],
       "season_note": "November–February.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 900, "mid": 2500, "luxury": 6500},
+      "daily_cost_inr": {
+        "budget": 900,
+        "mid": 2500,
+        "luxury": 6500
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Fee not confirmed from a source in this pass.",
       "activity_cost_inr": null,
@@ -297,26 +600,52 @@
         "https://karnatakatourism.org/en/experiences/hampi-aihole-pattadakal-badami"
       ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "North Karnataka rural vegetarian oota with Jolada rotti, Pithla (gram flour curry), and fresh curd.",
+      "best_time_tip": "Visit in late afternoon (3:30–5:30 PM) when warm slanting sunlight reveals the exquisite details of the Virupaksha and Mallikarjuna temple friezes.",
+      "practical_tip": "Carry an umbrella and water bottle as there is minimal tree canopy between monuments across this UNESCO World Heritage complex."
     },
     {
       "id": "vijayapura",
-      "name": "Vijayapura (Bijapur)",
+      "name": "Vijayapura",
       "region": "North Karnataka",
       "district": "Vijayapura",
       "lat": 16.83,
       "lng": 75.7361,
-      "categories": ["heritage"],
-      "interest_tags": ["domes", "indo-islamic", "monuments"],
-      "experience_types": ["heritage_tour", "sightseeing"],
+      "categories": [
+        "heritage"
+      ],
+      "interest_tags": [
+        "domes",
+        "indo-islamic",
+        "monuments"
+      ],
+      "experience_types": [
+        "heritage_tour",
+        "sightseeing"
+      ],
       "is_start_hub": true,
       "description": "Adilshahi capital with the monumental Gol Gumbaz, imperial mosques and fine Indo-Islamic architecture.",
-      "highlights": ["Gol Gumbaz", "Ibrahim Rauza", "Jama Masjid", "Upper Fort"],
-      "best_months": [11, 12, 1, 2],
+      "highlights": [
+        "Gol Gumbaz",
+        "Ibrahim Rauza",
+        "Jama Masjid",
+        "Upper Fort"
+      ],
+      "best_months": [
+        11,
+        12,
+        1,
+        2
+      ],
       "season_note": "November–February.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 900, "mid": 2400, "luxury": 6000},
+      "daily_cost_inr": {
+        "budget": 900,
+        "mid": 2400,
+        "luxury": 6000
+      },
       "entry_fees_inr": 20,
       "entry_fee_note": "Gol Gumbaz Indian adult ticket ₹20 (ticketing source).",
       "activity_cost_inr": null,
@@ -327,7 +656,10 @@
         "https://tripxoxo.com/product/skip-the-queue-gol-gumbaz-vijayapura"
       ],
       "data_confidence": "verified",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Authentic Vijayapura Jolada Rotti with spicy Shenga chutney, spiced brinjal curry, and historic local sweet Gulgule.",
+      "best_time_tip": "Enter Gol Gumbaz right at 8:30 AM; ascend to the Whispering Gallery before crowds arrive to clearly hear the remarkable 11-time acoustic echo.",
+      "practical_tip": "Hire a licensed guide at Ibrahim Rauza ('The Black Taj') to explore the delicate minarets and subterranean chambers."
     },
     {
       "id": "bidar",
@@ -336,52 +668,109 @@
       "district": "Bidar",
       "lat": 17.9244,
       "lng": 77.5267,
-      "categories": ["heritage"],
-      "interest_tags": ["fort", "bahmani", "handicrafts"],
-      "experience_types": ["heritage_tour", "sightseeing"],
+      "categories": [
+        "heritage"
+      ],
+      "interest_tags": [
+        "fort",
+        "bahmani",
+        "handicrafts"
+      ],
+      "experience_types": [
+        "heritage_tour",
+        "sightseeing"
+      ],
       "is_start_hub": false,
       "description": "The northernmost fortress of the Deccan, with a majestic fort, Bahmani monuments and handmade paper craft.",
-      "highlights": ["Bidar Fort", "Bahmani Tombs", "Guru Nanak Jhira Sahib", "Rangin Mahal"],
-      "best_months": [11, 12, 1, 2],
+      "highlights": [
+        "Bidar Fort",
+        "Bahmani Tombs",
+        "Guru Nanak Jhira Sahib",
+        "Rangin Mahal"
+      ],
+      "best_months": [
+        11,
+        12,
+        1,
+        2
+      ],
       "season_note": "November–February.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 850, "mid": 2300, "luxury": 6000},
+      "daily_cost_inr": {
+        "budget": 850,
+        "mid": 2300,
+        "luxury": 6000
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Fee not confirmed from a source in this pass.",
       "activity_cost_inr": null,
       "family_friendly": true,
       "accessibility_notes": null,
-      "sources": ["https://en.wikipedia.org/wiki/Bidar_Fort"],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Bidar_Fort"
+      ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Bidar Biryani, spicy Kalyana Karnataka Jolada Rotti with chana masala, and traditional sweet Shahi Tukda.",
+      "best_time_tip": "Best visited October to February; explore the extensive Bidar Fort ramparts and Rangeen Mahal's mother-of-pearl inlay tiles in the morning.",
+      "practical_tip": "Visit the local craft workshops near the fort to buy authentic GI-tagged Bidriware (blackened zinc and copper alloy inlaid with pure silver wire)."
     },
     {
       "id": "kalaburagi",
-      "name": "Kalaburagi (Gulbarga)",
+      "name": "Kalaburagi",
       "region": "North Karnataka",
       "district": "Kalaburagi",
       "lat": 17.3405,
       "lng": 76.8311,
-      "categories": ["heritage", "spiritual"],
-      "interest_tags": ["dargah", "mosques", "bahmani"],
-      "experience_types": ["pilgrimage", "heritage_tour"],
+      "categories": [
+        "heritage",
+        "spiritual"
+      ],
+      "interest_tags": [
+        "dargah",
+        "mosques",
+        "bahmani"
+      ],
+      "experience_types": [
+        "pilgrimage",
+        "heritage_tour"
+      ],
       "is_start_hub": true,
       "description": "Former Bahmani capital with the spectacular Jama Masjid, mystic dargahs and rich Sufi heritage.",
-      "highlights": ["Jama Masjid", "Khwaja Banda Nawaz Dargah", "Bahmani Tombs", "Gulbarga Fort"],
-      "best_months": [11, 12, 1, 2],
+      "highlights": [
+        "Jama Masjid",
+        "Khwaja Banda Nawaz Dargah",
+        "Bahmani Tombs",
+        "Gulbarga Fort"
+      ],
+      "best_months": [
+        11,
+        12,
+        1,
+        2
+      ],
       "season_note": "November–February.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 900, "mid": 2400, "luxury": 6000},
+      "daily_cost_inr": {
+        "budget": 900,
+        "mid": 2400,
+        "luxury": 6000
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Fee not confirmed from a source in this pass.",
       "activity_cost_inr": null,
       "family_friendly": true,
       "accessibility_notes": null,
-      "sources": ["https://en.wikipedia.org/wiki/Gulbarga_Fort"],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Gulbarga_Fort"
+      ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Kalaburagi Malpuri sweet, fiery Jolada Rotti meals with Gongura (sorrel leaf) chutney, and hot spicy Dalcha.",
+      "best_time_tip": "Visit during the cool winter months (November to February); tour the 14th-century Jami Masjid inside Gulbarga Fort in the morning.",
+      "practical_tip": "When visiting the Khwaja Bande Nawaz Dargah, dress conservatively covering head and shoulders, and remove footwear at the outer gateway."
     },
     {
       "id": "belagavi",
@@ -390,25 +779,56 @@
       "district": "Belagavi",
       "lat": 15.8583,
       "lng": 74.5244,
-      "categories": ["heritage", "urban"],
-      "interest_tags": ["fort", "lakes", "colonial"],
-      "experience_types": ["heritage_tour", "sightseeing"],
+      "categories": [
+        "heritage",
+        "urban"
+      ],
+      "interest_tags": [
+        "fort",
+        "lakes",
+        "colonial"
+      ],
+      "experience_types": [
+        "heritage_tour",
+        "sightseeing"
+      ],
       "is_start_hub": true,
       "description": "A fort city of Kittur Rani Chennamma with colonial-era libraries, temples and a pleasant plateau climate.",
-      "highlights": ["Belagavi Fort", "Kittur Rani Chennamma Fort", "Gokak Falls", "Vishweswarayya Tower"],
-      "best_months": [10, 11, 12, 1, 2, 3],
+      "highlights": [
+        "Belagavi Fort",
+        "Kittur Rani Chennamma Fort",
+        "Gokak Falls",
+        "Vishweswarayya Tower"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
       "season_note": "October–March.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 1000, "mid": 2600, "luxury": 6500},
+      "daily_cost_inr": {
+        "budget": 1000,
+        "mid": 2600,
+        "luxury": 6500
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Fee not confirmed from a source in this pass.",
       "activity_cost_inr": null,
       "family_friendly": true,
       "accessibility_notes": null,
-      "sources": ["https://en.wikipedia.org/wiki/Belgaum_Fort"],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Belgaum_Fort"
+      ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Famous Belagavi Kunda (slow-simmered caramelized milk sweet), hot Mandige (paper-thin sugar crêpe), and North Karnataka Jolada Rotti with spiced curries.",
+      "best_time_tip": "Best visited September to February; visit Gokak Falls and Belagavi Fort ramparts between October and December when water volume is high and air is cool.",
+      "practical_tip": "Visit the 13th-century Kamal Basti (Jain temple) inside Belagavi Fort in the early morning; stop at Camp area sweet shops for fresh hot Kunda."
     },
     {
       "id": "shravanabelagola",
@@ -417,25 +837,55 @@
       "district": "Hassan",
       "lat": 12.859,
       "lng": 76.489,
-      "categories": ["heritage", "spiritual"],
-      "interest_tags": ["jain-heritage", "monument", "pilgrimage"],
-      "experience_types": ["pilgrimage", "heritage_tour"],
+      "categories": [
+        "heritage",
+        "spiritual"
+      ],
+      "interest_tags": [
+        "jain-heritage",
+        "monument",
+        "pilgrimage"
+      ],
+      "experience_types": [
+        "pilgrimage",
+        "heritage_tour"
+      ],
       "is_start_hub": false,
       "description": "Ancient Jain pilgrimage town crowned by the colossal Gommateshwara Bahubali statue.",
-      "highlights": ["Gommateshwara Bahubali statue (Vindhyagiri)", "Chandragiri hill temples", "Kalyani tank"],
-      "best_months": [10, 11, 12, 1, 2, 3],
+      "highlights": [
+        "Gommateshwara Bahubali statue (Vindhyagiri)",
+        "Chandragiri hill temples",
+        "Kalyani tank"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
       "season_note": "October–March.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 900, "mid": 2400, "luxury": 6000},
+      "daily_cost_inr": {
+        "budget": 900,
+        "mid": 2400,
+        "luxury": 6000
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Fee not confirmed from a source in this pass.",
       "activity_cost_inr": null,
       "family_friendly": true,
       "accessibility_notes": "The Gommateshwara statue on Vindhyagiri is reached by climbing roughly 400+ stone steps; Chandragiri hill is easier.",
-      "sources": ["https://en.wikipedia.org/wiki/Shravanabelagola"],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Shravanabelagola"
+      ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Traditional Jain and satvik Karnataka oota: mild rasam, steamed rice, bean palya, and rich badam payasam.",
+      "best_time_tip": "Start climbing the 620 granite steps up Vindhyagiri Hill before 8:00 AM; the bare stone rocks heat up significantly under midday sun.",
+      "practical_tip": "Carry an extra pair of thick cotton socks to walk comfortably on the sunny temple stone courtyard around the 57-foot monolithic Bahubali statue."
     },
     {
       "id": "belur",
@@ -444,17 +894,41 @@
       "district": "Hassan",
       "lat": 13.1629,
       "lng": 75.8606,
-      "categories": ["heritage"],
-      "interest_tags": ["hoysala", "temple-architecture", "sculpture"],
-      "experience_types": ["heritage_tour", "sightseeing"],
+      "categories": [
+        "heritage"
+      ],
+      "interest_tags": [
+        "hoysala",
+        "temple-architecture",
+        "sculpture"
+      ],
+      "experience_types": [
+        "heritage_tour",
+        "sightseeing"
+      ],
       "is_start_hub": false,
       "description": "Hoysala-era temple town on the Yagachi river, home to the intricately carved Chennakeshava Temple.",
-      "highlights": ["Chennakeshava Temple", "Hoysala sculpture halls", "Yagachi Dam"],
-      "best_months": [10, 11, 12, 1, 2, 3],
+      "highlights": [
+        "Chennakeshava Temple",
+        "Hoysala sculpture halls",
+        "Yagachi Dam"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
       "season_note": "October–March.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 1000, "mid": 2600, "luxury": 6500},
+      "daily_cost_inr": {
+        "budget": 1000,
+        "mid": 2600,
+        "luxury": 6500
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Fee not confirmed from a source in this pass.",
       "activity_cost_inr": null,
@@ -465,7 +939,10 @@
         "https://www.deccan-heritage-foundation.org/heritage-sites/halebidu-and-belur/"
       ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Hassan-style Akki Rotti with fresh coconut chutney, Obbattu (sweet lentil flatbread), and hot filter coffee.",
+      "best_time_tip": "Visit Chennakeshava Temple between 8:00 AM and 11:00 AM; morning light from the east illuminates the intricate soapstone facade.",
+      "practical_tip": "Look closely under the temple eaves for the 42 Madanika (bracket dancer) figures; each depicts an intricate classical pose, hairstyle, and costume."
     },
     {
       "id": "halebidu",
@@ -474,17 +951,41 @@
       "district": "Hassan",
       "lat": 13.2132,
       "lng": 75.995,
-      "categories": ["heritage"],
-      "interest_tags": ["hoysala", "temple-architecture", "sculpture"],
-      "experience_types": ["heritage_tour", "sightseeing"],
+      "categories": [
+        "heritage"
+      ],
+      "interest_tags": [
+        "hoysala",
+        "temple-architecture",
+        "sculpture"
+      ],
+      "experience_types": [
+        "heritage_tour",
+        "sightseeing"
+      ],
       "is_start_hub": false,
       "description": "Former Hoysala capital with the monumental Hoysaleswara Temple set beside a lake.",
-      "highlights": ["Hoysaleswara Temple", "Keshava temple (unfinished)", "Archaeological Museum"],
-      "best_months": [10, 11, 12, 1, 2, 3],
+      "highlights": [
+        "Hoysaleswara Temple",
+        "Keshava temple (unfinished)",
+        "Archaeological Museum"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
       "season_note": "October–March.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 1000, "mid": 2600, "luxury": 6500},
+      "daily_cost_inr": {
+        "budget": 1000,
+        "mid": 2600,
+        "luxury": 6500
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Fee not confirmed from a source in this pass.",
       "activity_cost_inr": null,
@@ -495,7 +996,10 @@
         "https://www.deccan-heritage-foundation.org/heritage-sites/halebidu-and-belur/"
       ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Traditional Hoysala vegetarian lunch: hot rice, fragrant saaru, kootu, and crispy sandige (sun-dried crisps).",
+      "best_time_tip": "Visit in late afternoon (3:00–5:30 PM) when the setting sun highlights the 30,000 detailed soapstone animal and mythological friezes.",
+      "practical_tip": "Walk the complete exterior star-shaped base of Hoysaleshwara Temple clockwise to follow the continuous narrative relief of the Mahabharata and Ramayana."
     },
     {
       "id": "somanathapura",
@@ -504,17 +1008,41 @@
       "district": "Mysuru",
       "lat": 12.2757,
       "lng": 76.8817,
-      "categories": ["heritage"],
-      "interest_tags": ["hoysala", "temple", "kaveri"],
-      "experience_types": ["heritage_tour", "sightseeing"],
+      "categories": [
+        "heritage"
+      ],
+      "interest_tags": [
+        "hoysala",
+        "temple",
+        "kaveri"
+      ],
+      "experience_types": [
+        "heritage_tour",
+        "sightseeing"
+      ],
       "is_start_hub": false,
       "description": "Small Cauvery-bank village with a perfectly preserved trikuta Chennakeshava temple.",
-      "highlights": ["Chennakeshava Temple (trikuta)", "Sculpted wall panels", "Cauvery riverbank"],
-      "best_months": [10, 11, 12, 1, 2, 3],
+      "highlights": [
+        "Chennakeshava Temple (trikuta)",
+        "Sculpted wall panels",
+        "Cauvery riverbank"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
       "season_note": "October–March.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 1000, "mid": 2600, "luxury": 6500},
+      "daily_cost_inr": {
+        "budget": 1000,
+        "mid": 2600,
+        "luxury": 6500
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Available fee reference only reports a 2020 price; not treated as current.",
       "activity_cost_inr": null,
@@ -525,34 +1053,70 @@
         "https://somanathapura.com/tourist-info/monument-entry/"
       ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Mysore region rural plantain-leaf meals: hot Bisi Bele Bath with boondi, spiced buttermilk, and Obbattu.",
+      "best_time_tip": "Visit mid-morning (9:30–11:30 AM); the trikuta (triple-sanctum) Keshava Temple has remarkable intact ceiling carvings best seen in morning light.",
+      "practical_tip": "Hire an ASI-registered monument guide for 30 minutes; the 16 ceiling canopies each feature completely distinct blooming lotus and plantain flower carvings."
     },
     {
       "id": "hubballi",
-      "name": "Hubballi-Dharwad",
+      "name": "Hubballi",
       "region": "North Karnataka",
       "district": "Dharwad",
       "lat": 15.3647,
       "lng": 75.124,
-      "categories": ["urban", "food"],
-      "interest_tags": ["street-food", "temples", "twin-cities"],
-      "experience_types": ["sightseeing", "food_tour"],
+      "categories": [
+        "urban",
+        "food"
+      ],
+      "interest_tags": [
+        "street-food",
+        "temples",
+        "twin-cities"
+      ],
+      "experience_types": [
+        "sightseeing",
+        "food_tour"
+      ],
       "is_start_hub": true,
       "description": "Twin commercial cities with a lively street-food culture, centuries-old temples and easy access to Dandeli.",
-      "highlights": ["Unkal Lake", "Chennakeshava Temple", "Nrupatunga Betta", "SDM Medical College Museum"],
-      "best_months": [1, 2, 3, 4, 10, 11, 12],
+      "highlights": [
+        "Unkal Lake",
+        "Chennakeshava Temple",
+        "Nrupatunga Betta",
+        "SDM Medical College Museum"
+      ],
+      "best_months": [
+        1,
+        2,
+        3,
+        4,
+        10,
+        11,
+        12
+      ],
       "season_note": null,
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 1000, "mid": 2600, "luxury": 6500},
+      "daily_cost_inr": {
+        "budget": 1000,
+        "mid": 2600,
+        "luxury": 6500
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "City destination; no single confirmed main-attraction fee.",
       "activity_cost_inr": null,
       "family_friendly": true,
       "accessibility_notes": null,
-      "sources": ["https://en.wikipedia.org/wiki/Hubli-Dharwad"],
-      "data_confidence": "unverified",
-      "last_verified_on": null
+      "sources": [
+        "https://en.wikipedia.org/wiki/Hubli-Dharwad",
+        "https://dharwad.nic.in/"
+      ],
+      "data_confidence": "estimated",
+      "last_verified_on": "2026-10-17",
+      "local_dish": "Hubli-Dharwad famous Dharwad Peda (rich caramelized milk fudge from Babu Singh's Thakur Peda) and crispy Girmit (puffed rice snack) with Mirchi Bajji.",
+      "best_time_tip": "Visit October to March; enjoy the sunset breeze and boating at Unkal Lake around 5:00 PM.",
+      "practical_tip": "Visit the ancient 12th-century Western Chalukyan Chandramouleshwara Temple near Unkal early in the morning before city traffic builds up."
     },
     {
       "id": "dandeli",
@@ -561,17 +1125,49 @@
       "district": "Uttara Kannada",
       "lat": 15.2523,
       "lng": 74.6222,
-      "categories": ["adventure", "nature", "wildlife"],
-      "interest_tags": ["rafting", "jungle", "rivers", "kayaking"],
-      "experience_types": ["trekking", "boating", "wildlife_safari"],
+      "categories": [
+        "adventure",
+        "nature",
+        "wildlife"
+      ],
+      "interest_tags": [
+        "rafting",
+        "jungle",
+        "rivers",
+        "kayaking"
+      ],
+      "experience_types": [
+        "trekking",
+        "boating",
+        "wildlife_safari"
+      ],
       "is_start_hub": false,
       "description": "Jungle adventure hub on the Kali River offering rafting, kayaking, coracle rides and hornbill spotting.",
-      "highlights": ["Kali River rafting", "Dandeli Wildlife Sanctuary", "Syntherocks", "Kavala Caves"],
-      "best_months": [10, 11, 12, 1, 2, 3, 4, 5, 6],
+      "highlights": [
+        "Kali River rafting",
+        "Dandeli Wildlife Sanctuary",
+        "Syntherocks",
+        "Kavala Caves"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
       "season_note": "Rafting season depends on river flow; confirm locally before booking.",
       "min_nights": 1,
       "typical_nights": 2,
-      "daily_cost_inr": {"budget": 1200, "mid": 3000, "luxury": 8000},
+      "daily_cost_inr": {
+        "budget": 1200,
+        "mid": 3000,
+        "luxury": 8000
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Rafting/activity prices are operator-dependent and were not confirmed in this pass.",
       "activity_cost_inr": null,
@@ -582,7 +1178,10 @@
         "https://karnatakatourism.org/en/experiences/rafting-in-dandeli/"
       ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "North Canara Malnad meals: hot Jolada Rotti with bamboo shoot curry, spicy green chutney, and refreshing herbal Kokum saru.",
+      "best_time_tip": "White-water rafting season on the Kali River is best from October to May; dam water releases usually occur between 9:00 AM and 1:00 PM.",
+      "practical_tip": "Pre-book Kali river rafting and forest jungle safaris with certified operators; wear quick-dry clothing and carry waterproof cases for phones."
     },
     {
       "id": "gokarna",
@@ -591,17 +1190,47 @@
       "district": "Uttara Kannada",
       "lat": 14.55,
       "lng": 74.3167,
-      "categories": ["beach", "spiritual", "nature"],
-      "interest_tags": ["beaches", "trek-between-coves", "temple-town", "sunsets"],
-      "experience_types": ["beach", "pilgrimage", "trekking", "photography"],
+      "categories": [
+        "beach",
+        "spiritual",
+        "nature"
+      ],
+      "interest_tags": [
+        "beaches",
+        "trek-between-coves",
+        "temple-town",
+        "sunsets"
+      ],
+      "experience_types": [
+        "beach",
+        "pilgrimage",
+        "trekking",
+        "photography"
+      ],
       "is_start_hub": true,
       "description": "Temple town on the Arabian Sea with laid-back coves like Om Beach and Kudle Beach.",
-      "highlights": ["Om Beach", "Kudle Beach", "Mahabaleshwar Temple", "Half Moon Beach trek"],
-      "best_months": [10, 11, 12, 1, 2, 3],
+      "highlights": [
+        "Om Beach",
+        "Kudle Beach",
+        "Mahabaleshwar Temple",
+        "Half Moon Beach trek"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
       "season_note": "October–March; sea can be rough during the monsoon.",
       "min_nights": 1,
       "typical_nights": 2,
-      "daily_cost_inr": {"budget": 1100, "mid": 3000, "luxury": 8500},
+      "daily_cost_inr": {
+        "budget": 1100,
+        "mid": 3000,
+        "luxury": 8500
+      },
       "entry_fees_inr": 0,
       "entry_fee_note": "Mahabaleshwar Temple entry is free (per Wikipedia/Karnataka Tourism).",
       "activity_cost_inr": null,
@@ -612,7 +1241,10 @@
         "https://karnatakatourism.org/en/destinations/gokarna/"
       ],
       "data_confidence": "verified",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Fresh Karavali seafood curry or Neer Dosa with vegetable gassi at Namaste Cafe on Om Beach; chilled Kokum sherbet and local cashew sweets.",
+      "best_time_tip": "Best visited October to March; do the 4-km cliff trail hike across Kudle, Om, Half Moon, and Paradise beaches during morning low tide.",
+      "practical_tip": "Carry cash as beach shacks frequently have erratic digital network connections; swim only in designated flags-marked zones."
     },
     {
       "id": "murudeshwar",
@@ -621,25 +1253,58 @@
       "district": "Uttara Kannada",
       "lat": 14.0936,
       "lng": 74.4838,
-      "categories": ["beach", "spiritual"],
-      "interest_tags": ["shiva-statue", "gopura", "island-fort", "scuba"],
-      "experience_types": ["pilgrimage", "beach", "boating"],
+      "categories": [
+        "beach",
+        "spiritual"
+      ],
+      "interest_tags": [
+        "shiva-statue",
+        "gopura",
+        "island-fort",
+        "scuba"
+      ],
+      "experience_types": [
+        "pilgrimage",
+        "beach",
+        "boating"
+      ],
       "is_start_hub": false,
       "description": "Coastal shrine with a towering Shiva statue, gopura and island-fort views over the Arabian Sea.",
-      "highlights": ["Murudeshwar Temple", "Shiva Statue", "Netrani Island boat ride", "Murudeshwar Fort"],
-      "best_months": [10, 11, 12, 1, 2, 3],
+      "highlights": [
+        "Murudeshwar Temple",
+        "Shiva Statue",
+        "Netrani Island boat ride",
+        "Murudeshwar Fort"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
       "season_note": "October–March.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 1000, "mid": 2700, "luxury": 7000},
+      "daily_cost_inr": {
+        "budget": 1000,
+        "mid": 2700,
+        "luxury": 7000
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Fee not confirmed from a source in this pass.",
       "activity_cost_inr": null,
       "family_friendly": true,
       "accessibility_notes": null,
-      "sources": ["https://en.wikipedia.org/wiki/Murdeshwar"],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Murdeshwar"
+      ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Fresh coastal Karavali meals with red rice, fish fry / crisp raw banana podi, and local Sol Kadi.",
+      "best_time_tip": "Take the 18-storey elevator inside the Raja Gopura at 9:00 AM for a 360-degree aerial panorama of the 123-foot Shiva statue and Arabian Sea.",
+      "practical_tip": "Netrani Island scuba diving trips depart early morning (7:30 AM) from the harbor; confirm weather and sea conditions the day prior."
     },
     {
       "id": "yana",
@@ -648,25 +1313,57 @@
       "district": "Uttara Kannada",
       "lat": 14.527,
       "lng": 74.5596,
-      "categories": ["nature", "adventure"],
-      "interest_tags": ["caves", "limestone", "forest-trek", "monsoon"],
-      "experience_types": ["trekking", "nature_walk", "photography"],
+      "categories": [
+        "nature",
+        "adventure"
+      ],
+      "interest_tags": [
+        "caves",
+        "limestone",
+        "forest-trek",
+        "monsoon"
+      ],
+      "experience_types": [
+        "trekking",
+        "nature_walk",
+        "photography"
+      ],
       "is_start_hub": false,
       "description": "Limestone cave formations in the Sahyadri forests of Uttara Kannada, reached by a short forest walk.",
-      "highlights": ["Bhairaveshwara cave", "Mohan shikhara cave", "Forest trail to the caves"],
-      "best_months": [10, 11, 12, 1, 2, 3],
+      "highlights": [
+        "Bhairaveshwara cave",
+        "Mohan shikhara cave",
+        "Forest trail to the caves"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
       "season_note": "October–March (post-monsoon and winter).",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 1000, "mid": 2600, "luxury": 7000},
+      "daily_cost_inr": {
+        "budget": 1000,
+        "mid": 2600,
+        "luxury": 7000
+      },
       "entry_fees_inr": 50,
       "entry_fee_note": "Karnataka Tourism lists an approximate forest fee of ₹20–50; budget uses the ₹50 upper bound.",
       "activity_cost_inr": null,
       "family_friendly": null,
       "accessibility_notes": "Reached on foot via a forest trail; involves walking on uneven ground.",
-      "sources": ["https://karnatakatourism.org/en/attractions/yana-caves"],
+      "sources": [
+        "https://karnatakatourism.org/en/attractions/yana-caves"
+      ],
       "data_confidence": "verified",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Kumta coastal Karavali thali with Neer Dosa, sweet banana halwa, and refreshing tender coconut water at the base trail.",
+      "best_time_tip": "Hike the shaded forest path to the limestone monoliths (Bhairaveshwara and Mohini peaks) between 8:00 AM and 11:00 AM before afternoon humidity rises.",
+      "practical_tip": "Wear trekking shoes with good grip as the limestone cave trail has damp patches; take a torch to explore the natural cave passage behind the rock."
     },
     {
       "id": "karwar",
@@ -675,25 +1372,58 @@
       "district": "Uttara Kannada",
       "lat": 14.8,
       "lng": 74.13,
-      "categories": ["beach", "nature"],
-      "interest_tags": ["harbour", "islands", "estuary", "tagore"],
-      "experience_types": ["beach", "boating", "nature_walk"],
+      "categories": [
+        "beach",
+        "nature"
+      ],
+      "interest_tags": [
+        "harbour",
+        "islands",
+        "estuary",
+        "tagore"
+      ],
+      "experience_types": [
+        "beach",
+        "boating",
+        "nature_walk"
+      ],
       "is_start_hub": true,
       "description": "A quiet harbour town of Rabindranath Tagore fame with island-dotted bays and the Kali river estuary.",
-      "highlights": ["Devbagh Beach", "Karwar Beach", "Rabindranath Tagore Beach", "Kali River boat ride"],
-      "best_months": [10, 11, 12, 1, 2, 3],
+      "highlights": [
+        "Devbagh Beach",
+        "Karwar Beach",
+        "Rabindranath Tagore Beach",
+        "Kali River boat ride"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
       "season_note": "October–March.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 1000, "mid": 2600, "luxury": 7000},
+      "daily_cost_inr": {
+        "budget": 1000,
+        "mid": 2600,
+        "luxury": 7000
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Fee not confirmed from a source in this pass.",
       "activity_cost_inr": null,
       "family_friendly": true,
       "accessibility_notes": null,
-      "sources": ["https://en.wikipedia.org/wiki/Karwar"],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Karwar"
+      ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Authentic Karwar seafood thali with Surmai fry, red rice, and tangy Kokum kadhi; local jackfruit pappad and cashew sweets.",
+      "best_time_tip": "Visit between October and March; catch the panoramic sunset over the Kali River estuary from Sadashivgad Fort.",
+      "practical_tip": "Take a 15-minute speed boat to Kurumgad Island or Devbagh Beach early morning for dolphin-spotting excursions."
     },
     {
       "id": "udupi",
@@ -702,25 +1432,59 @@
       "district": "Udupi",
       "lat": 13.3389,
       "lng": 74.7451,
-      "categories": ["spiritual", "beach", "food"],
-      "interest_tags": ["krishna-temple", "dosas", "student-town", "beaches"],
-      "experience_types": ["pilgrimage", "beach", "food_tour"],
+      "categories": [
+        "spiritual",
+        "beach",
+        "food"
+      ],
+      "interest_tags": [
+        "krishna-temple",
+        "dosas",
+        "student-town",
+        "beaches"
+      ],
+      "experience_types": [
+        "pilgrimage",
+        "beach",
+        "food_tour"
+      ],
       "is_start_hub": false,
       "description": "Pilgrim town famous for the Krishna temple, student-town Manipal and the iconic Udupi dosa.",
-      "highlights": ["Sri Krishna Matha", "Malpe Beach", "St. Mary's Island", "Manipal End Point"],
-      "best_months": [10, 11, 12, 1, 2, 3],
+      "highlights": [
+        "Sri Krishna Matha",
+        "Malpe Beach",
+        "St. Mary's Island",
+        "Manipal End Point"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
       "season_note": "October–March.",
       "min_nights": 1,
       "typical_nights": 2,
-      "daily_cost_inr": {"budget": 1000, "mid": 2700, "luxury": 7000},
+      "daily_cost_inr": {
+        "budget": 1000,
+        "mid": 2700,
+        "luxury": 7000
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Fee not confirmed from a source in this pass.",
       "activity_cost_inr": null,
       "family_friendly": true,
       "accessibility_notes": null,
-      "sources": ["https://en.wikipedia.org/wiki/Udupi"],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Udupi"
+      ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "World-famous satvik Udupi Brahmin oota on banana leaf at Mitra Samaj; hot Goli Baje, Neer Dosa, and authentic filter coffee near Car Street.",
+      "best_time_tip": "Visit Sri Krishna Matha during morning Nirmalya darshan (5:30–7:00 AM) or evening Mahapooja (7:00 PM) to experience the brass lamps and temple chariot.",
+      "practical_tip": "Dress code at Sri Krishna Matha requires men to remove shirts and women to dress modestly (salwar/saree); take the 15-minute ferry from Malpe beach to St. Mary's columnar basalt islands."
     },
     {
       "id": "karkala",
@@ -729,17 +1493,42 @@
       "district": "Udupi",
       "lat": 13.2,
       "lng": 74.983,
-      "categories": ["heritage", "spiritual"],
-      "interest_tags": ["jain-heritage", "monument", "lakes"],
-      "experience_types": ["heritage_tour", "sightseeing"],
+      "categories": [
+        "heritage",
+        "spiritual"
+      ],
+      "interest_tags": [
+        "jain-heritage",
+        "monument",
+        "lakes"
+      ],
+      "experience_types": [
+        "heritage_tour",
+        "sightseeing"
+      ],
       "is_start_hub": false,
       "description": "Coastal hinterland town known for its towering Gommateshwara statue and Jain heritage.",
-      "highlights": ["Gommateshwara statue", "Anantha lake & temple", "Karkala Fort"],
-      "best_months": [10, 11, 12, 1, 2, 3],
+      "highlights": [
+        "Gommateshwara statue",
+        "Anantha lake & temple",
+        "Karkala Fort"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
       "season_note": "October–March.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 950, "mid": 2500, "luxury": 6500},
+      "daily_cost_inr": {
+        "budget": 950,
+        "mid": 2500,
+        "luxury": 6500
+      },
       "entry_fees_inr": 0,
       "entry_fee_note": "Gommateshwara statue has no entry fee (per sources cited).",
       "activity_cost_inr": null,
@@ -750,7 +1539,10 @@
         "https://myholidayhappiness.com/place/karnataka/karkala/gomatheshwara-statue-karkala"
       ],
       "data_confidence": "verified",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "South Canara vegetarian delicacies: Jackfruit Gatti (steamed dumplings), Golibaje, Pathrode, and tender cashew nut curry.",
+      "best_time_tip": "Visit the 42-foot single-stone Gommateshwara statue atop the rocky hillock at sunset for cool breezes and sweeping Western Ghats views.",
+      "practical_tip": "Combine the Gommateshwara hill with the 15th-century Chaturmukha Basadi, which has four identical stone entrances aligned with the cardinal directions."
     },
     {
       "id": "moodabidri",
@@ -759,25 +1551,55 @@
       "district": "Udupi",
       "lat": 12.9101,
       "lng": 75.003,
-      "categories": ["heritage", "spiritual"],
-      "interest_tags": ["jain-heritage", "basadis", "manuscripts"],
-      "experience_types": ["heritage_tour", "pilgrimage"],
+      "categories": [
+        "heritage",
+        "spiritual"
+      ],
+      "interest_tags": [
+        "jain-heritage",
+        "basadis",
+        "manuscripts"
+      ],
+      "experience_types": [
+        "heritage_tour",
+        "pilgrimage"
+      ],
       "is_start_hub": false,
       "description": "Jain temple town famous for the thousand-pillar Saavira Kambada Basadi.",
-      "highlights": ["Saavira Kambada Basadi (1000 pillars)", "Guru Basadi", "Jain manuscript museum"],
-      "best_months": [10, 11, 12, 1, 2, 3],
+      "highlights": [
+        "Saavira Kambada Basadi (1000 pillars)",
+        "Guru Basadi",
+        "Jain manuscript museum"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
       "season_note": "October–March.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 900, "mid": 2400, "luxury": 6000},
+      "daily_cost_inr": {
+        "budget": 900,
+        "mid": 2400,
+        "luxury": 6000
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Fee not confirmed from a source in this pass.",
       "activity_cost_inr": null,
       "family_friendly": true,
       "accessibility_notes": null,
-      "sources": ["https://en.wikipedia.org/wiki/Moodabidri"],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Moodabidri"
+      ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Authentic Jain and Tuluva breakfast: Neer Dosa with coconut jaggery mixture, spicy uppittu, and fresh filter coffee.",
+      "best_time_tip": "Explore the 15th-century Tribhuvana Tilaka Chudamani (Thousand Pillar Temple) in the morning; soft natural light illuminates the 1,000 unique granite carved pillars.",
+      "practical_tip": "Notice that no two pillars in the entire Thousand Pillar Temple have identical carvings; inspect the outer granite base for dragons and giraffes depicting ancient maritime trade."
     },
     {
       "id": "mangaluru",
@@ -786,17 +1608,46 @@
       "district": "Dakshina Kannada",
       "lat": 12.8717,
       "lng": 74.8425,
-      "categories": ["urban", "beach", "food"],
-      "interest_tags": ["seafood", "temples", "beaches", "port-city"],
-      "experience_types": ["sightseeing", "food_tour", "beach"],
+      "categories": [
+        "urban",
+        "beach",
+        "food"
+      ],
+      "interest_tags": [
+        "seafood",
+        "temples",
+        "beaches",
+        "port-city"
+      ],
+      "experience_types": [
+        "sightseeing",
+        "food_tour",
+        "beach"
+      ],
       "is_start_hub": true,
       "description": "Coastal port city with temple architecture, golden beaches and celebrated Mangalorean seafood.",
-      "highlights": ["Panambur Beach", "Kadri Manjunath Temple", "Kudroli Gokarnath Temple", "Tannirbhavi Beach"],
-      "best_months": [10, 11, 12, 1, 2, 3],
+      "highlights": [
+        "Panambur Beach",
+        "Kadri Manjunath Temple",
+        "Kudroli Gokarnath Temple",
+        "Tannirbhavi Beach"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
       "season_note": "October–March.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 1200, "mid": 3000, "luxury": 7500},
+      "daily_cost_inr": {
+        "budget": 1200,
+        "mid": 3000,
+        "luxury": 7500
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "City destination; no single confirmed main-attraction fee.",
       "activity_cost_inr": null,
@@ -807,7 +1658,10 @@
         "https://karnatakatourism.org/en/destinations/"
       ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Iconic Mangalorean cuisine: Neer Dosa with Kori Gassi (chicken curry) or vegetable stew, crispy Mangalore Buns, and rich Ghee Roast.",
+      "best_time_tip": "Best visited October to February; visit Kudroli Gokarnath Temple in the evening when illuminated by thousands of golden lights.",
+      "practical_tip": "Head to Panambur Beach in the late afternoon for water scooter rides and panoramic coastal sunsets; try Ideal Ice Cream's famous 'Gadbad' sundae."
     },
     {
       "id": "agumbe",
@@ -816,25 +1670,57 @@
       "district": "Shivamogga",
       "lat": 13.5087,
       "lng": 75.0959,
-      "categories": ["nature", "hills"],
-      "interest_tags": ["rainforest", "sunset-point", "king-cobra", "waterfalls"],
-      "experience_types": ["nature_walk", "photography", "trekking"],
+      "categories": [
+        "nature",
+        "hills"
+      ],
+      "interest_tags": [
+        "rainforest",
+        "sunset-point",
+        "king-cobra",
+        "waterfalls"
+      ],
+      "experience_types": [
+        "nature_walk",
+        "photography",
+        "trekking"
+      ],
       "is_start_hub": false,
       "description": "Rainforest plateau in the Western Ghats famous for sunset points, king cobras and monsoon streams.",
-      "highlights": ["Agumbe Sunset Point", "Rainforest Research Station", "Onake Abbi Falls", "Koodlu Teertha trek"],
-      "best_months": [10, 11, 12, 1, 2],
+      "highlights": [
+        "Agumbe Sunset Point",
+        "Rainforest Research Station",
+        "Onake Abbi Falls",
+        "Koodlu Teertha trek"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2
+      ],
       "season_note": "October–February; heavy rains June–September.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 1000, "mid": 2600, "luxury": 7000},
+      "daily_cost_inr": {
+        "budget": 1000,
+        "mid": 2600,
+        "luxury": 7000
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Fee not confirmed from a source in this pass.",
       "activity_cost_inr": null,
       "family_friendly": null,
       "accessibility_notes": "Forest trails and waterfall walks involve uneven terrain.",
-      "sources": ["https://en.wikipedia.org/wiki/Agumbe"],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Agumbe"
+      ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Malnad forest culinary specials: Halasina Hannina Happala (jackfruit pappad), steaming Kashaya herbal drink, and cooling Thambli.",
+      "best_time_tip": "Known as the 'Cherrapunji of the South'; visit Sunset Point overlooking the Western Ghats canopy at 5:30 PM on clear winter evenings.",
+      "practical_tip": "Apply natural insect repellent and wear leech socks when walking the rainforest trails to Barkana and Onake Abbi waterfalls."
     },
     {
       "id": "chikkamagaluru",
@@ -843,17 +1729,44 @@
       "district": "Chikkamagaluru",
       "lat": 13.3252,
       "lng": 75.7924,
-      "categories": ["nature", "hills"],
-      "interest_tags": ["coffee", "peaks", "plantations", "waterfalls"],
-      "experience_types": ["nature_walk", "trekking", "photography"],
+      "categories": [
+        "nature",
+        "hills"
+      ],
+      "interest_tags": [
+        "coffee",
+        "peaks",
+        "plantations",
+        "waterfalls"
+      ],
+      "experience_types": [
+        "nature_walk",
+        "trekking",
+        "photography"
+      ],
       "is_start_hub": true,
       "description": "Coffee-country hill district of misty peaks, waterfalls and plantation homestays.",
-      "highlights": ["Mullayanagiri Peak", "Baba Budangiri", "Hebbe Falls", "Coffee plantation walk"],
-      "best_months": [10, 11, 12, 1, 2],
+      "highlights": [
+        "Mullayanagiri Peak",
+        "Baba Budangiri",
+        "Hebbe Falls",
+        "Coffee plantation walk"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2
+      ],
       "season_note": "October–February; monsoon June–September.",
       "min_nights": 1,
       "typical_nights": 2,
-      "daily_cost_inr": {"budget": 1200, "mid": 3200, "luxury": 8500},
+      "daily_cost_inr": {
+        "budget": 1200,
+        "mid": 3200,
+        "luxury": 8500
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Fee not confirmed from a source in this pass.",
       "activity_cost_inr": null,
@@ -864,7 +1777,10 @@
         "https://en.wikipedia.org/wiki/Chikmagalur"
       ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Malnad specialties: Akki Rotti with Kaayi chutney, steaming Pathrode (colocasia roll), and freshly roasted Arabica estate filter coffee.",
+      "best_time_tip": "Drive up Mullayanagiri peak (Karnataka's highest point at 1,930 m) before 8:00 AM; after 9:30 AM narrow mountain passes suffer vehicle congestion and heavy mist.",
+      "practical_tip": "Book an estate tour at a local coffee plantation to observe harvesting, pulping, and bean roasting; carry a light jacket year-round."
     },
     {
       "id": "kudremukh",
@@ -873,17 +1789,44 @@
       "district": "Chikkamagaluru",
       "lat": 13.1295,
       "lng": 75.2686,
-      "categories": ["nature", "hills", "adventure"],
-      "interest_tags": ["trekking", "grasslands", "shola-forest"],
-      "experience_types": ["trekking", "nature_walk", "photography"],
+      "categories": [
+        "nature",
+        "hills",
+        "adventure"
+      ],
+      "interest_tags": [
+        "trekking",
+        "grasslands",
+        "shola-forest"
+      ],
+      "experience_types": [
+        "trekking",
+        "nature_walk",
+        "photography"
+      ],
       "is_start_hub": false,
       "description": "Rolling shola grasslands and the classic Kudremukh ridge trek in the Western Ghats.",
-      "highlights": ["Kudremukh Peak trek", "Karkala Bahubali Statue", "Hanuman Gundi Falls", "Lakya Dam"],
-      "best_months": [10, 11, 12, 1, 2],
+      "highlights": [
+        "Kudremukh Peak trek",
+        "Karkala Bahubali Statue",
+        "Hanuman Gundi Falls",
+        "Lakya Dam"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2
+      ],
       "season_note": "October–February; heavy rains June–September.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 1100, "mid": 2800, "luxury": 7500},
+      "daily_cost_inr": {
+        "budget": 1100,
+        "mid": 2800,
+        "luxury": 7500
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Trek permit conditions/fees change seasonally; not confirmed in this pass.",
       "activity_cost_inr": null,
@@ -894,7 +1837,10 @@
         "https://karnatakatourism.org/en/destinations/chikkamagalur/"
       ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Nutritious Malnad trekking meals: hot ganji (rice porridge) with tender mango pickle, neer dosa, and fresh black pepper tea.",
+      "best_time_tip": "Trekking season is October to February; obtain the mandatory forest department trek permit online in advance (strictly capped daily entries).",
+      "practical_tip": "Start the 20-km horse-face peak trek by 6:00 AM from the base camp; carry your own water bottle as disposable plastic is strictly prohibited inside the National Park."
     },
     {
       "id": "sringeri",
@@ -903,17 +1849,43 @@
       "district": "Chikkamagaluru",
       "lat": 13.42,
       "lng": 75.25,
-      "categories": ["spiritual", "nature"],
-      "interest_tags": ["matha", "pilgrimage", "river", "ghat-town"],
-      "experience_types": ["pilgrimage", "nature_walk"],
+      "categories": [
+        "spiritual",
+        "nature"
+      ],
+      "interest_tags": [
+        "matha",
+        "pilgrimage",
+        "river",
+        "ghat-town"
+      ],
+      "experience_types": [
+        "pilgrimage",
+        "nature_walk"
+      ],
       "is_start_hub": false,
       "description": "Sharada Peetham maths on the Tunga river, a major Advaita pilgrimage centre in the Ghats.",
-      "highlights": ["Sharada Peetham", "Vidyashankara Temple", "Tunga river banks"],
-      "best_months": [10, 11, 12, 1, 2, 3],
+      "highlights": [
+        "Sharada Peetham",
+        "Vidyashankara Temple",
+        "Tunga river banks"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
       "season_note": "October–March.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 1000, "mid": 2600, "luxury": 7000},
+      "daily_cost_inr": {
+        "budget": 1000,
+        "mid": 2600,
+        "luxury": 7000
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "No entry fee confirmed for the maths.",
       "activity_cost_inr": null,
@@ -924,7 +1896,10 @@
         "https://karnatakatourism.org/en/destinations/sringeri"
       ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Sacred temple Annadana lunch served at the matha dining hall: satvik rice, sambar, rasam, and sweet payasam.",
+      "best_time_tip": "Visit Vidyashankara Temple at sunrise (6:30 AM); its 12 zodiac stone pillars are aligned so that the morning sun rays fall on the pillar corresponding to the current solar month.",
+      "practical_tip": "Dress modestly covering shoulders and knees; feed puffed rice to the sacred mahseer fish in the Tunga river ghat steps outside the temple."
     },
     {
       "id": "shivamogga",
@@ -933,25 +1908,56 @@
       "district": "Shivamogga",
       "lat": 13.933,
       "lng": 75.567,
-      "categories": ["urban", "nature"],
-      "interest_tags": ["gateway-city", "backwaters", "safari"],
-      "experience_types": ["sightseeing", "nature_walk"],
+      "categories": [
+        "urban",
+        "nature"
+      ],
+      "interest_tags": [
+        "gateway-city",
+        "backwaters",
+        "safari"
+      ],
+      "experience_types": [
+        "sightseeing",
+        "nature_walk"
+      ],
       "is_start_hub": true,
       "description": "Gateway city to Malnad, base for Jog Falls and wildlife sanctuaries with easy rail and air links.",
-      "highlights": ["Tyavarekoppa Lion Safari", "Sharavathi backwaters", "Sacred Heart Museum", "Sacred Heart Church"],
-      "best_months": [10, 11, 12, 1, 2, 3],
+      "highlights": [
+        "Tyavarekoppa Lion Safari",
+        "Sharavathi backwaters",
+        "Sacred Heart Museum",
+        "Sacred Heart Church"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
       "season_note": "October–March.",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 950, "mid": 2500, "luxury": 6500},
+      "daily_cost_inr": {
+        "budget": 950,
+        "mid": 2500,
+        "luxury": 6500
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "City destination; no single confirmed main-attraction fee.",
       "activity_cost_inr": null,
       "family_friendly": true,
       "accessibility_notes": null,
-      "sources": ["https://en.wikipedia.org/wiki/Shivamogga"],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Shivamogga"
+      ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Mid-Karnataka classics: Davangere Benne Dosa, spicy Mandakki Oggarane (seasoned puffed rice), and fresh Malnad filter coffee.",
+      "best_time_tip": "Visit between September and February; visit the Sakrebyle Elephant Camp at 8:30 AM to watch mahouts bathe elephants in the Tunga river backwaters.",
+      "practical_tip": "Pre-book the lion and tiger safari at Tyavarekoppa; combining Sakrebyle in the morning and Tyavarekoppa in the afternoon makes an ideal wildlife day."
     },
     {
       "id": "jog-falls",
@@ -960,44 +1966,100 @@
       "district": "Shivamogga",
       "lat": 14.2235,
       "lng": 74.8087,
-      "categories": ["nature"],
-      "interest_tags": ["waterfall", "viewpoints", "monsoon"],
-      "experience_types": ["sightseeing", "photography", "nature_walk"],
+      "categories": [
+        "nature"
+      ],
+      "interest_tags": [
+        "waterfall",
+        "viewpoints",
+        "monsoon"
+      ],
+      "experience_types": [
+        "sightseeing",
+        "photography",
+        "nature_walk"
+      ],
       "is_start_hub": false,
       "description": "One of India's highest plunge waterfalls, a four-cascade drop in the Sharavathi valley.",
-      "highlights": ["Viewing platforms for Raja, Rani, Rocket & Roarer", "Linganamakki reservoir", "Tunga viewpoint"],
-      "best_months": [8, 9, 10, 11, 12],
+      "highlights": [
+        "Viewing platforms for Raja, Rani, Rocket & Roarer",
+        "Linganamakki reservoir",
+        "Tunga viewpoint"
+      ],
+      "best_months": [
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
       "season_note": "Peak flow during and just after the monsoon (August–December).",
       "min_nights": 1,
       "typical_nights": 1,
-      "daily_cost_inr": {"budget": 950, "mid": 2500, "luxury": 6500},
+      "daily_cost_inr": {
+        "budget": 950,
+        "mid": 2500,
+        "luxury": 6500
+      },
       "entry_fees_inr": 20,
       "entry_fee_note": "Viewpoint entry ₹20 for Indian adults (per Karnataka Tourism reference).",
       "activity_cost_inr": null,
       "family_friendly": true,
       "accessibility_notes": "Viewpoints involve walking; the falls edge has railings.",
-      "sources": ["https://karnatakatourism.org/en/attractions/jog-falls"],
+      "sources": [
+        "https://karnatakatourism.org/en/attractions/jog-falls"
+      ],
       "data_confidence": "verified",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Simple Sahyadri hill-station canteen meals: hot Mirchi Bajji with ginger tea, lemon rice, and curd rice overlooking the gorge.",
+      "best_time_tip": "Peak water flow is August to November after the monsoon; arrive at the viewpoints by 9:00 AM before afternoon mist blankets the 830-foot canyon.",
+      "practical_tip": "Descend the 1,400 stone steps to the bottom of the gorge only if physically fit; carry plenty of water for the return climb."
     },
     {
       "id": "madikeri",
-      "name": "Madikeri (Coorg)",
+      "name": "Madikeri",
       "region": "Malnad (Western Ghats)",
       "district": "Kodagu",
       "lat": 12.4209,
       "lng": 75.7397,
-      "categories": ["nature", "hills"],
-      "interest_tags": ["coffee-estates", "waterfalls", "kodava-culture"],
-      "experience_types": ["nature_walk", "sightseeing", "photography"],
+      "categories": [
+        "nature",
+        "hills"
+      ],
+      "interest_tags": [
+        "coffee-estates",
+        "waterfalls",
+        "kodava-culture"
+      ],
+      "experience_types": [
+        "nature_walk",
+        "sightseeing",
+        "photography"
+      ],
       "is_start_hub": true,
       "description": "Scotland of India — coffee and spice estates, ridge-top viewpoints and Kodava culture.",
-      "highlights": ["Raja's Seat", "Abbey Falls", "Madikeri Fort", "Dubare Elephant Camp"],
-      "best_months": [10, 11, 12, 1, 2, 3],
+      "highlights": [
+        "Raja's Seat",
+        "Abbey Falls",
+        "Madikeri Fort",
+        "Dubare Elephant Camp"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
       "season_note": "October–March.",
       "min_nights": 1,
       "typical_nights": 2,
-      "daily_cost_inr": {"budget": 1300, "mid": 3400, "luxury": 9000},
+      "daily_cost_inr": {
+        "budget": 1300,
+        "mid": 3400,
+        "luxury": 9000
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Fee not confirmed from a source in this pass.",
       "activity_cost_inr": null,
@@ -1008,26 +2070,56 @@
         "https://karnatakatourism.org/en/destinations/coorg"
       ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Traditional Kodava spread: Akki Roti with Kadambuttu (steamed rice balls) and bamboo shoot curry (or Coorg Pandi curry), followed by fresh Coorg Arabica coffee.",
+      "best_time_tip": "Visit Raja's Seat gardens at 5:30 PM to enjoy sunset views over the undulating Western Ghats valleys where Coorg kings once spent evenings.",
+      "practical_tip": "Carry a light sweater or rain jacket year-round; visit Abbey Falls early morning (8:30 AM) to beat tourist bus arrivals."
     },
     {
       "id": "b-r-hills",
-      "name": "B.R. Hills (Biligiri Ranganatha)",
+      "name": "B.R. Hills",
       "region": "Southern Forests",
       "district": "Chamarajanagar",
       "lat": 11.9939,
       "lng": 77.1406,
-      "categories": ["wildlife", "nature", "hills"],
-      "interest_tags": ["tiger-reserve", "ghat-junction", "temples", "tribal-markets"],
-      "experience_types": ["wildlife_safari", "nature_walk"],
+      "categories": [
+        "wildlife",
+        "nature",
+        "hills"
+      ],
+      "interest_tags": [
+        "tiger-reserve",
+        "ghat-junction",
+        "temples",
+        "tribal-markets"
+      ],
+      "experience_types": [
+        "wildlife_safari",
+        "nature_walk"
+      ],
       "is_start_hub": false,
       "description": "Biligiri Ranganatha hills where the Eastern and Western Ghats meet — temple town, forests and safaris.",
-      "highlights": ["BRT wildlife sanctuary drive", "Biligiri Ranganatha temple", "Hilltop viewpoints"],
-      "best_months": [10, 11, 12, 1, 2, 3],
+      "highlights": [
+        "BRT wildlife sanctuary drive",
+        "Biligiri Ranganatha temple",
+        "Hilltop viewpoints"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
       "season_note": "October–March; drier months are preferable for wildlife viewing.",
       "min_nights": 1,
       "typical_nights": 2,
-      "daily_cost_inr": {"budget": 1300, "mid": 3600, "luxury": 9500},
+      "daily_cost_inr": {
+        "budget": 1300,
+        "mid": 3600,
+        "luxury": 9500
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "No adult main-attraction fee confirmed; safari pricing varies.",
       "activity_cost_inr": null,
@@ -1038,7 +2130,10 @@
         "https://karnatakatourism.org/en/experiences/br-tiger-reserve-and-wildlife-sanctuary/"
       ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Traditional Soliga tribal forest honey, steaming Ragi Mudde with soppina saaru, and hot South Indian filter coffee.",
+      "best_time_tip": "Best visited October to March; early morning (6:30 AM) forest safaris offer the highest likelihood of elephant, gaur, and leopard sightings.",
+      "practical_tip": "The 500-year-old Biligiri Rangaswamy Temple sits on a sheer 400-meter cliff; watch for monkeys and enjoy panoramic views across the Nilgiri-Ghats ecological bridge."
     },
     {
       "id": "bandipur",
@@ -1047,17 +2142,45 @@
       "district": "Chamarajanagar",
       "lat": 11.6617,
       "lng": 76.6272,
-      "categories": ["wildlife", "nature"],
-      "interest_tags": ["tiger-reserve", "safari", "elephants"],
-      "experience_types": ["wildlife_safari", "nature_walk"],
+      "categories": [
+        "wildlife",
+        "nature"
+      ],
+      "interest_tags": [
+        "tiger-reserve",
+        "safari",
+        "elephants"
+      ],
+      "experience_types": [
+        "wildlife_safari",
+        "nature_walk"
+      ],
       "is_start_hub": false,
       "description": "Tiger reserve in the Nilgiri biosphere with elephant herds, dry deciduous forest and jeep safaris.",
-      "highlights": ["Morning jeep safari", "Nilgiri biosphere drive", "Bandipur interpretation centre", "Mudumalai edge"],
-      "best_months": [10, 11, 12, 1, 2, 3, 4, 5],
+      "highlights": [
+        "Morning jeep safari",
+        "Nilgiri biosphere drive",
+        "Bandipur interpretation centre",
+        "Mudumalai edge"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
       "season_note": "October–February; March–May can also be good for sightings.",
       "min_nights": 1,
       "typical_nights": 2,
-      "daily_cost_inr": {"budget": 1500, "mid": 4500, "luxury": 12000},
+      "daily_cost_inr": {
+        "budget": 1500,
+        "mid": 4500,
+        "luxury": 12000
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Safari and entry prices in available listings conflict or may be outdated; omitted rather than guessed.",
       "activity_cost_inr": null,
@@ -1068,26 +2191,59 @@
         "https://karnatakatourism.org/en/attractions/bandipura-wildlife-sanctuary"
       ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "South Karnataka forest meals: steamed Ragi Mudde, hot vegetable sambar, freshly cooked country beans, and spiced buttermilk.",
+      "best_time_tip": "Safaris operate 6:15–9:00 AM and 3:30–6:00 PM; dawn safaris offer the coolest temperatures and highest predator activity along waterholes.",
+      "practical_tip": "Wear neutral earth-toned clothing (khaki, olive, brown) on safaris and maintain absolute silence; night traffic through the national park is banned from 9:00 PM to 6:00 AM."
     },
     {
       "id": "kabini",
-      "name": "Kabini (Nagarhole)",
+      "name": "Kabini",
       "region": "Southern Forests",
       "district": "Kodagu",
       "lat": 11.9735,
       "lng": 76.3528,
-      "categories": ["wildlife", "nature"],
-      "interest_tags": ["boat-safari", "elephants", "leopards", "birding"],
-      "experience_types": ["wildlife_safari", "boating", "photography"],
+      "categories": [
+        "wildlife",
+        "nature"
+      ],
+      "interest_tags": [
+        "boat-safari",
+        "elephants",
+        "leopards",
+        "birding"
+      ],
+      "experience_types": [
+        "wildlife_safari",
+        "boating",
+        "photography"
+      ],
       "is_start_hub": false,
       "description": "River-side tiger reserve famed for boat safaris, leopards, wild dogs and dense elephant country.",
-      "highlights": ["Boat safari on Kabini backwaters", "Jeep safari in Nagarhole", "Barrage viewpoint", "Birding at dawn"],
-      "best_months": [10, 11, 12, 1, 2, 3, 4, 5],
+      "highlights": [
+        "Boat safari on Kabini backwaters",
+        "Jeep safari in Nagarhole",
+        "Barrage viewpoint",
+        "Birding at dawn"
+      ],
+      "best_months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
       "season_note": "Dry season roughly October–May; boat safari may be suspended in very high or low water.",
       "min_nights": 1,
       "typical_nights": 2,
-      "daily_cost_inr": {"budget": 1600, "mid": 4800, "luxury": 13000},
+      "daily_cost_inr": {
+        "budget": 1600,
+        "mid": 4800,
+        "luxury": 13000
+      },
       "entry_fees_inr": null,
       "entry_fee_note": "Boat/jeep safari prices vary by operator and season; not confirmed in this pass.",
       "activity_cost_inr": null,
@@ -1098,7 +2254,10 @@
         "https://karnatakatourism.org/en/experiences/backwaters-wilderness-safari"
       ],
       "data_confidence": "estimated",
-      "last_verified_on": "2026-10-14"
+      "last_verified_on": "2026-10-14",
+      "local_dish": "Jungle lodge buffet featuring Kodagu-Mysuru fusion dishes, steaming Ragi Mudde with country greens, and herbal decoction tea.",
+      "best_time_tip": "Evening boat safaris along the Kabini reservoir backwaters (3:30–6:00 PM) offer world-class sightings of large Asian elephant herds congregating at the shoreline.",
+      "practical_tip": "Pre-book boat and jeep safaris online well in advance through the Karnataka Forest Department or Jungle Lodges, as safari vehicle quotas are strictly limited."
     }
   ]
 }

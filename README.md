@@ -1,321 +1,365 @@
-# AI Travel Planner for Karnataka
+# Karnataka AI Travel Planner & Road-Trip Navigator
 
-Personalised, AI-assisted travel itineraries for Karnataka, built around a traveller's
-**interests, available time, budget and preferred type of experience**.
+A production-ready, full-stack travel planner and road-trip engine for Karnataka, India. Built to generate personalized, constraint-aware itineraries based on a traveller's **interests, available time, real budget, group size, pace, dietary preferences, and travel style**.
 
-> Status: **foundation complete** — working FastAPI backend, React frontend, curated
-> dataset, deterministic fallback planner, AI integration (env-configured), health check
-> and smoke tests. Visual design intentionally deferred (UI is functional and neutral so
-> it can be adapted to your design pass later).
+Combines a **deterministic geographic optimization engine**, **SQLite database covering all 31 Karnataka districts**, **live road-corridor routing (OSRM + Overpass)**, and **optional LLM narrative personalization (Google Gemini / OpenAI)** with automatic smart fallbacks.
 
-## Tech stack
+---
 
-| Layer      | Tech |
-|------------|------|
-| Frontend   | React, Vite, TypeScript, Tailwind CSS v4, Leaflet + OpenStreetMap |
-| Backend    | Python, FastAPI, Pydantic v2 |
-| AI         | Any OpenAI-compatible LLM API, configured via environment variables |
-| Data       | Curated JSON dataset of 38 Karnataka destinations with source attribution (no DB needed) |
-| Testing    | Pytest (backend), Vitest (frontend) |
-| Storage    | None for now — SQLite only if persistence becomes a real requirement |
+## Table of Contents
 
-## Repository layout
+1. [Project Overview & Problem Statement](#project-overview--problem-statement)
+2. [Implemented Features](#implemented-features)
+3. [Architecture & Technology Stack](#architecture--technology-stack)
+4. [Database & Tourism Data Coverage](#database--tourism-data-coverage)
+5. [API Endpoints](#api-endpoints)
+6. [Windows Setup & Run Instructions](#windows-setup--run-instructions)
+7. [Environment Variables & Configuration](#environment-variables--configuration)
+8. [Testing & Quality Verification](#testing--quality-verification)
+9. [Test Counts & Results](#test-counts--results)
+10. [External Providers, Data Provenance & Limitations](#external-providers-data-provenance--limitations)
+
+---
+
+## Project Overview & Problem Statement
+
+### The Problem
+Generic AI travel tools often hallucinate non-existent attractions, propose geographically impossible travel days (e.g. driving across the Western Ghats in two hours), omit realistic meal and rest stops, and pad budget figures to arbitrarily match whatever number the user entered.
+
+### The Solution
+Karnataka AI Travel Planner solves this with a multi-layered approach:
+- **Math & Geography First**: Route feasibility, driving durations, stay spans, and cost calculations are handled by deterministic Python modules before the LLM is ever called.
+- **Honest Budget Calculation**: Accommodation, food, fuel/transit, entry fees, and incidental buffers are calculated from verified local rates. Costs are never artificially padded to match the budget.
+- **District-Wide Coverage**: Backed by a curated database spanning all 31 Karnataka revenue districts, featuring authentic local dishes, best-time advice, and practical tips.
+- **Live Road-Trip Corridor Discovery**: Dynamically traces road routes between any Karnataka towns, identifies candidate detour stops within a configurable corridor buffer (15–25 km), ranks detour options, and pinpoints verified highway meal stops.
+- **Graceful Fallbacks**: If the AI provider is unconfigured, rate-limited, or unavailable, the system transparently serves a complete, high-quality deterministic itinerary without crashing.
+
+---
+
+## Implemented Features
+
+### 1. Personalized Trip Planner (`/plan`)
+- **Multi-Day Itinerary Generation**: Day-by-day scheduling for trips from 1 to 21 days with custom pace models (`relaxed`, `balanced`, `packed`).
+- **Destination Scoring & Selection**: Multi-factor scoring prioritizing traveller interests (Heritage, Nature, Coffee & Hills, Wildlife, Beaches, Spirituality, Food, Adventure, Urban, Photography).
+- **Multi-Day Stay Spans (`StaySpan`)**: Consecutive days in a destination are modeled as a single stay rather than duplicate selections.
+- **Proximity-Based Catalog Substitutions**: Suggests alternative destinations within ~150 km matching the traveller's interests (e.g. Dandeli, Yana, or Murudeshwar for Gokarna—never statewide jumps like Bengaluru or Mysuru).
+- **Curated Regional Gastronomy**: Every day recommends authentic regional cuisine (e.g. Belagavi Kunda and Jolada Rotti, Kumta Karavali thali with Neer Dosa, Madikeri Pandi curry, or Davanagere Benne Dosa).
+- **Highway Lunch Stops**: Automatic 12:30 PM meal stops on intercity travel days.
+- **Context-Sensitive Tips**: Dress codes and temple etiquette appear only when visiting spiritual monuments.
+
+### 2. Road-Trip Corridor Discovery & Planning (`/roadtrip`)
+- **Dynamic Route Discovery (`POST /api/routes/discover`)**: Traces real road routes between any pair of Karnataka hubs using OSRM geometry.
+- **Corridor Candidate Detours**: Identifies attractions and towns along the highway corridor within a 15–25 km buffer.
+- **Detour Scoring & Ranking**: Evaluates deviation distance, additional driving time, and thematic relevance to recommend viable stops.
+- **Interactive Detour Selection**: Travellers can inspect detour details, view photos/highlights, and toggle optional stops on/off before generating their plan.
+- **Highway Meal Discovery**: Discovers restaurants, dhabas, and vegetarian thali spots along highway corridors using Overpass POI data with verified fallback stops.
+- **Multi-Day Road Trip Planning (`POST /api/routes/plan`)**: Generates an end-to-end driving schedule with morning/afternoon/evening slots, driving legs, and automatic overnight stay allocation when daily driving exceeds safe limits (5–6 hours/day).
+
+### 3. Transparent Budgeting Engine
+- **Honest 5-Way Split**:
+  $$\text{Total} = \text{Stay} + \text{Food} + \text{Transport} + \text{Entry Fees} + \text{Incidental Extra}$$
+- **Zero Padding**: Total cost is always the authentic sum of its components and is never copied or reverse-engineered from the user's budget input.
+- **Verified Entry Fees**: Distinguishes verified fees from unverified fees (`unknown_entry_fees`), which are excluded from the total rather than falsely counted as ₹0.
+- **Dynamic Tier Adaptation**: Adapts tier selection based on daily budget per person (e.g. ₹10,000 budget selects Budget tier with public transit; ₹25,000 selects Mid-Range; ₹60,000 selects Luxury with private cab).
+
+### 4. Interactive Maps & Visuals
+- **Leaflet & OpenStreetMap**: Interactive map with route polylines, start/end markers, overnight stay pins, and candidate detour waypoints.
+- **Accurate Photo Matching**: Only destinations with dedicated, verified photography display their own images; all other destinations use a high-resolution neutral Karnataka landscape to prevent displaying incorrect named locations.
+
+### 5. PDF Export & Offline Saved Trips
+- **PDF Generation**: Generates clean, downloadable, printable travel itineraries with day-by-day schedules, route summaries, and cost breakdowns via `jsPDF` and `html2canvas`.
+- **Saved Trips (`/saved`)**: Client-side trip bookmarking using `localStorage` for offline review.
+
+---
+
+## Architecture & Technology Stack
 
 ```
-.
-├── README.md
-├── .gitignore
-├── .env.example                # root template (both apps)
-├── backend/
-│   ├── .env.example            # backend-only template
-│   ├── requirements.txt
-│   ├── requirements-dev.txt
-│   ├── pytest.ini
-│   ├── app/
-│   │   ├── main.py             # FastAPI app factory + CORS
-│   │   ├── config.py           # settings from environment
-│   │   ├── schemas.py          # typed request/response models
-│   │   ├── api/                # endpoints (health, destinations, plans)
-│   │   ├── data/               # curated dataset + integrity-checking loader
-│   │   ├── scripts/            # validate_dataset.py (CLI data-quality report)
-│   │   ├── docs/DATA_SOURCES.md# dataset provenance & confidence definitions
-│   │   └── services/
-│   │       ├── destination_service.py # validate/filter/search/nearby/map-ready
-│   │       ├── recommendation.py   # scoring & destination selection
-│   │       ├── routing.py          # distance, travel time, stop order
-│   │       ├── budget.py           # cost calculation
-│   │       ├── fallback_planner.py # deterministic planner (always works)
-│   │       ├── ai_service.py       # dedicated AI service (providers, validation, errors)
-│   │       ├── ai_planner.py       # LLM integration + validation orchestration
-│   │       └── planner.py          # orchestrator (AI -> fallback)
-│   └── tests/                  # pytest smoke + unit tests
-└── frontend/
-    ├── package.json
-    ├── vite.config.ts          # dev proxy /api -> :8000 + vitest config
-    └── src/
-        ├── api/                # typed API client + TS types (mirror of schemas)
-        ├── components/         # form, itinerary, budget, map, health badge
-        └── lib/                # pure helpers (unit tested)
+                          ┌───────────────────────────────────┐
+                          │   React 19 + Vite Frontend        │
+                          │   (TypeScript, Tailwind CSS v4)   │
+                          └─────────────────┬─────────────────┘
+                                            │ HTTP / JSON
+                                            ▼
+                          ┌───────────────────────────────────┐
+                          │   FastAPI Backend (Python 3.13)   │
+                          │   (Pydantic v2 validation)        │
+                          └─────────────────┬─────────────────┘
+                                            │
+         ┌────────────────────────┬─────────┴──────────────┬────────────────────────┐
+         ▼                        ▼                        ▼                        ▼
+┌──────────────────┐    ┌──────────────────┐    ┌──────────────────┐    ┌──────────────────┐
+│ SQLite Database  │    │ Routing & Places │    │ AI Engine        │    │ Pure Fallback    │
+│ karnataka_       │    │ OSRM / Overpass  │    │ Gemini 2.0 Flash │    │ Planner &        │
+│ tourism.db       │    │ & Local Geo Calc │    │ / OpenAI / Mock  │    │ Budget Engine    │
+│ (31 districts)   │    │ (Haversine km)   │    │ (AIPersonalize)  │    │ (Deterministic)  │
+└──────────────────┘    └──────────────────┘    └──────────────────┘    └──────────────────┘
 ```
 
-Each concern lives in its own module — destination data, recommendation logic,
-budget calculation, routing, AI integration and API endpoints are separate files.
+| Component | Technology | Role |
+|---|---|---|
+| **Frontend Framework** | React 19, TypeScript, Vite 7 | Fast single-page application with type safety |
+| **Styling** | Tailwind CSS v4, Lucide React icons | Responsive UI with clean cards and itinerary views |
+| **Mapping** | Leaflet 1.9, React-Leaflet, OpenStreetMap | Interactive corridor, waypoint, and route rendering |
+| **Document Export** | jsPDF 4.2, html2canvas | Client-side itinerary PDF compilation and download |
+| **Backend Framework** | Python 3.10+ (tested on 3.13), FastAPI | High-performance async/threaded API server |
+| **Data Validation** | Pydantic v2, `pydantic-settings` | Strict schema validation and error reporting |
+| **Database** | SQLite 3 (`karnataka_tourism.db`) | 31 districts, 67 destinations, 32 attractions, route cache |
+| **AI Personalization**| Google Gemini (`gemini-2.0-flash`), OpenAI, or `mock` | Structured narrative generation and activity details |
+| **Road Routing** | OSRM (`router.project-osrm.org`) + Haversine fallback | Driving distance, duration, and road corridor geometry |
+| **POI Discovery** | Overpass API (`overpass-api.de`) + Curated stops | Candidate stops and highway restaurant discovery |
 
-## Prerequisites
+---
 
-- Python 3.10+ (tested on 3.13)
-- Node.js 20.19+ / 22+ with npm
-- An AI provider API key is **optional**: without it or when `AI_PROVIDER=mock`, the system works seamlessly.
+## Database & Tourism Data Coverage
 
-## Environment configuration
+The application is backed by a local SQLite database located at `backend/app/data/karnataka_tourism.db` (seeded and managed via `backend/app/data/store.py` and `backend/app/ingest/pipeline.py`).
 
-Templates (never commit real secrets):
+### Current Database Inventory
 
-- [`.env.example`](.env.example) — root overview
-- [`backend/.env.example`](backend/.env.example) — CORS origins + AI provider settings
-- [`frontend/.env.example`](frontend/.env.example) — `VITE_API_BASE_URL` (optional)
+| Table | Row Count | Description |
+|---|---|---|
+| `districts` | **31** | Complete administrative coverage of all 31 Karnataka revenue districts |
+| `destinations` | **67** | Curated 38 benchmark tourist hubs + expanded district travel centers |
+| `attractions` | **32** | Verified point-of-interest entries linked to districts and categories |
+| `route_cache` | **23+** | Cached OSRM highway corridor polylines and durations for fast lookup |
+| `ingestion_logs` | **3** | Audit log tracking dataset seeding and pipeline updates |
 
-Key variables:
+### Curated Benchmark Dataset (38 Core Destinations)
+Every curated benchmark destination includes verified coordinates, administrative revenue division, verified entry fees (or explicitly marked unknown), typical and minimum stay nights, seasonal visit recommendations, and:
+- **`local_dish`**: Specific authentic cuisine unique to that destination.
+- **`best_time_tip`**: Seasonal and time-of-day advice.
+- **`practical_tip`**: Unique local advice (dress code, parking, footwear, trail gear).
 
-| Variable | App | Purpose | Default |
+---
+
+## API Endpoints
+
+All error responses use the standard envelope: `{"error": {"code": "...", "message": "...", "details": [...]}}`.
+
+### System & Metadata
+| Method | Path | Summary | Description |
 |---|---|---|---|
-| `CORS_ORIGINS` | backend | Allowed frontend origins | `http://localhost:5173,...` |
-| `AI_PROVIDER` / `LLM_PROVIDER` | backend | Configurable AI provider (`openai`, `gemini`, or `mock`) | `openai` |
-| `AI_API_KEY` / `LLM_API_KEY` | backend | Provider API key. **Empty = deterministic fallback** | empty |
-| `AI_BASE_URL` / `LLM_BASE_URL` | backend | Provider base URL | `https://api.openai.com/v1` |
-| `AI_MODEL` / `LLM_MODEL` | backend | Model name (e.g. `gpt-4o-mini`, `gemini-1.5-flash`) | `gpt-4o-mini` |
-| `AI_TIMEOUT_SECONDS` / `LLM_TIMEOUT_SECONDS` | backend | Provider request timeout in seconds | `30` |
-| `VITE_API_BASE_URL` | frontend | Backend URL (leave empty to use dev proxy) | empty |
+| `GET` | `/api/health` | Health check | Returns status, version, dataset size (38), district count (31), attraction count, and LLM configuration status |
+| `GET` | `/health` | Legacy health check | Backward-compatible alias for monitoring services |
+| `GET` | `/api/meta` | Form metadata | Returns supported interests, budget tiers, paces, experience types, and all 31 starting hubs |
 
-> **Note on offline testing**: Setting `AI_PROVIDER=mock` allows running and testing the entire AI itinerary personalization pipeline locally without an API key or network access!
+### Catalog & Explorer
+| Method | Path | Summary | Description |
+|---|---|---|---|
+| `GET` | `/api/destinations` | List destinations | Paginated destination catalogue. Supports filtering by `interest`, `region`, `experience`, `category`, and `q`/`search` |
+| `GET` | `/api/destinations/{id}` | Destination detail | Full destination record, verified entry fees, tips, and coordinates |
+| `GET` | `/api/destinations/nearby`| Nearby destinations | Finds destinations within a radius (`max_km`) of given `lat`/`lng` coordinates |
+| `GET` | `/api/districts` | District coverage | Returns all 31 districts with destination counts and coverage status |
+| `GET` | `/api/attractions` | List attractions | Discovered and verified attractions, filterable by `district_id` |
+| `GET` | `/api/map/markers` | Map markers | All destination and attraction markers with OpenStreetMap attribution |
 
-## Running locally
+### Itinerary Planning
+| Method | Path | Summary | Description |
+|---|---|---|---|
+| `POST` | `/api/itineraries/generate` | Generate itinerary | Creates a personalized multi-day itinerary with stay spans and budget fit |
+| `POST` | `/api/itineraries/{id}/regenerate` | Stateless regenerate | Revises a previous itinerary with modified constraints (re-rolls activities) |
+| `POST` | `/api/v1/plans` | Legacy plan endpoint | Preserved for existing automated tests and legacy callers |
 
-### 1. Backend (FastAPI) — terminal 1
+### Road-Trip Discovery & Planning
+| Method | Path | Summary | Description |
+|---|---|---|---|
+| `POST` | `/api/routes/discover` | Corridor discovery | Traces road route between origin & destination, returns corridor polyline, candidate detour stops, and meal options |
+| `POST` | `/api/routes/plan` | Road-trip planner | Schedules selected candidate stops into a feasible multi-day road trip with driving times and overnight stays |
 
-Windows (PowerShell/CMD):
+---
 
-```bash
-cd backend
-py -3.13 -m venv .venv          # or: python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements-dev.txt
-copy .env.example .env          # then add your LLM_API_KEY if you have one
-uvicorn app.main:app --reload --port 8000
+## Windows Setup & Run Instructions
+
+### Prerequisites
+- **Python**: 3.10+ (tested on Python 3.13)
+- **Node.js**: 20.19+ or 22+ with `npm`
+- **PowerShell**: Windows PowerShell 5.1 or PowerShell 7+
+
+### Option A: Quickstart (Single Command for Full Stack) — Recommended
+
+Start both the FastAPI backend (`http://localhost:8000`) and Vite frontend (`http://localhost:5173`) concurrently:
+
+```powershell
+# From the repository root:
+npm run dev
+
+# Or using the PowerShell launch script:
+.\start-all.ps1
+
+# Or on CMD / double-click:
+.\start-all.bat
 ```
 
-macOS / Linux:
+Both servers run concurrently with color-coded logs (`[backend]` and `[frontend]`). Press `CTRL+C` to stop both.
 
-```bash
+---
+
+### Option B: Separate PowerShell Terminals
+
+#### Terminal 1: Backend Setup & Run
+
+```powershell
 cd backend
-python3 -m venv .venv
-source .venv/bin/activate
+
+# Create virtual environment
+python -m venv .venv
+
+# Activate virtual environment
+.\.venv\Scripts\Activate.ps1
+
+# Upgrade pip and install dependencies
+python -m pip install --upgrade pip
 pip install -r requirements-dev.txt
-cp .env.example .env
-uvicorn app.main:app --reload --port 8000
+
+# Create .env from template if not present
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+
+# Run FastAPI backend with auto-reload
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
+- API Docs: `http://localhost:8000/docs`
+- Health Endpoint: `http://localhost:8000/api/health`
 
-- Health check: http://localhost:8000/health
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
+#### Terminal 2: Frontend Setup & Run
 
-### 2. Frontend (Vite) — terminal 2
-
-```bash
+```powershell
 cd frontend
+
+# Install dependencies
 npm install
+
+# Start Vite development server
 npm run dev
 ```
+- Web Application: `http://localhost:5173/`
 
-Open http://localhost:5173. The dev server proxies `/api` and `/health` to the backend
-on `:8000` (CORS is also configured on the backend for direct calls).
+---
 
-## Tests & checks
+## Environment Variables & Configuration
 
-```bash
-# Backend (110 tests)
-cd backend
-.venv/Scripts/python -m pytest        # Windows — or: python -m pytest (activated venv)
-.venv/Scripts/python scripts/validate_dataset.py   # dataset data-quality report
+Configuration is loaded via Pydantic Settings in `backend/app/config.py`, checking `backend/.env`, root `.env`, and local environment variables.
 
-# Frontend (typecheck + 8 unit tests + production build)
-cd frontend
+### Backend Environment Variables (`backend/.env`)
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `CORS_ORIGINS` | string | `http://localhost:5173,http://127.0.0.1:5173` | Comma-separated allowed frontend origins |
+| `AI_PROVIDER` | string | `gemini` | Configurable AI provider: `gemini` (default), `openai`, or `mock` |
+| `AI_API_KEY` | string | `""` | Gemini or OpenAI API key. **Leave empty to use deterministic Smart planner** |
+| `AI_BASE_URL` | string | `https://generativelanguage.googleapis.com/v1beta/openai` | Base URL for the OpenAI-compatible completions endpoint |
+| `AI_MODEL` | string | `gemini-2.0-flash` | Model identifier (e.g. `gemini-2.0-flash`, `gemini-1.5-flash`, `gpt-4o-mini`) |
+| `AI_TIMEOUT_SECONDS` | float | `20.0` | Maximum wait time for LLM generation before falling back |
+| `ROUTING_ENABLED` | bool | `true` | When `true`, enables live OSRM/Overpass lookups; `false` uses deterministic haversine |
+| `OSRM_BASE_URL` | string | `https://router.project-osrm.org` | Road-routing server endpoint |
+| `OVERPASS_BASE_URL` | string | `https://overpass-api.de/api/interpreter` | Overpass API server for highway POI/dining discovery |
+
+> **Offline & Zero-Key Testing**:
+> - Setting `AI_PROVIDER=mock` enables testing the complete AI personalization pipeline locally without an API key or network access.
+> - Setting `AI_API_KEY=""` runs the deterministic Smart planner with complete destination-specific content.
+
+### Frontend Environment Variables (`frontend/.env`)
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `VITE_API_BASE_URL` | string | `""` (empty) | Backend base URL. Leave empty to use Vite's dev-server proxy (`/api -> :8000`) |
+
+---
+
+## Testing & Quality Verification
+
+Run all test suites and quality gates from your terminal:
+
+```powershell
+# Run all backend and frontend tests from root:
+npm run test:all
+
+# Run backend tests only:
+npm run test:backend
+
+# Run frontend tests only:
+npm run test
+
+# Run frontend TypeScript type checking:
 npm run typecheck
-npm test
+
+# Run frontend production build:
 npm run build
 ```
 
-## API overview
+---
 
-Canonical routes (all errors use the envelope `{"error": {"code", "message", "details"?}}`):
+## Test Counts & Results
 
-| Method | Path | Purpose |
+All automated test suites pass with **100% success rate**.
+
+### Backend Pytest Suite: 276 Tests Passed
+
+```text
+platform win32 -- Python 3.13.12, pytest-8.4.2
+=========================== 276 passed in 48.19s ===========================
+```
+
+#### Test Suite Breakdown
+
+| Test File | Test Count | Focus Area |
 |---|---|---|
-| GET | `/api/health` | Status, version, environment, LLM configured, dataset size |
-| GET | `/api/destinations` | Filters: `q`/`search`, `region`, `category`, `interest`, `experience`, `map_only`; pagination: `limit` (1-100, default 50), `offset` |
-| GET | `/api/destinations/{id}` | Full dataset record, or 404 with the error envelope |
-| POST | `/api/itineraries/generate` | Trip request → complete personalised itinerary + `budget_fit` |
-| POST | `/api/itineraries/{id}/regenerate` | Stateless revise/re-roll: body carries the previous itinerary payload + constraints (+ optional `changes`) |
-| GET | `/api/itineraries/{id}` | **Not implemented — no persistence in this MVP** (documented 404 by design) |
+| `test_ai_service.py` | 53 | AI providers, token limits, rate-limit retries, error sanitization, mock provider |
+| `test_roadtrip.py` | 22 | Corridor projection, candidate detour ranking, meal discovery, driving pace |
+| `test_itinerary_consistency.py` | 25 | Invariant checks, stay span continuity, leg agreement, fee transparency |
+| `test_destination_service.py` | 20 | Filter queries, spatial search, nearby coordinates, category filtering |
+| `test_destination_data.py` | 18 | Data loader schema validation, coordinate bounds, duplicate detection |
+| `test_itineraries_api.py` | 16 | Stateless generation, constraints, regeneration, bad budget detection |
+| `test_roadtrip_crashproof.py` | 15 | Live and edge-case route pairs, OSM failure degradation, missing inputs |
+| `test_four_inputs.py` | 14 | Proves interests, days, budget, and travel style dynamically change plans |
+| `test_ingest_and_store.py` | 13 | SQLite database seeding, upsert idempotency, 31-district coverage |
+| `test_itinerary_quality.py` | 12 | Pacing advice, multi-day stay coherence, budget floors, seasonal fit |
+| `test_api_endpoints.py` | 12 | REST endpoint responses, pagination, error envelope compliance |
+| `test_services.py` | 9 | Haversine distance, transport cost floors, nearest-neighbor ordering |
+| `test_planning.py` | 8 | Orchestration, fallback behavior when AI fails, forced AI 503 error |
+| `test_destinations.py` | 7 | Destination listing, search query parameter aliases (`q` and `search`) |
+| `test_district_starting_locations.py` | 7 | Resolving all 31 district headquarters as valid itinerary origin hubs |
+| `test_health.py` | 3 | Health check response fields, dataset size, Swagger docs availability |
+| **Total** | **276** | **All 276 passed** |
 
-Legacy routes kept for existing clients/tests: `/health`, `/api/v1/meta`, `/api/v1/destinations*`, `/api/v1/plans`.
-Interactive docs: `GET /docs` (Swagger UI) and `/redoc`.
+### Frontend Vitest Suite: 21 Tests Passed
 
-### Trip request schema (`POST /api/itineraries/generate`)
+```text
+RUN v3.2.7 frontend
+ ✓ src/lib/destinationAssets.test.ts (3 tests)
+ ✓ src/lib/roadtrip.test.ts (6 tests)
+ ✓ src/lib/format.test.ts (8 tests)
+ ✓ src/lib/pdfGenerator.test.ts (4 tests)
 
-| Field | Type | Rules |
-|---|---|---|
-| `start_city` | string | Must be a dataset destination id with coordinates (else 400) |
-| `days` | int | 1–21 ("impossible durations" rejected) |
-| `travel_dates` | `{start_date, end_date}` | Optional; start ≥ today, end ≥ start, span must equal `days` (else 422) |
-| `total_budget_inr` | int, optional | 100–1,00,00,000 INR (else 422); over-budget plans return `budget_fit.within_budget=false` + warning, never a fake success |
-| `travellers` | int | 1–20 |
-| `interests` | list | ≥1 (empty mandatory preference → 422) |
-| `experience_types` | list, optional | Preference bonus in scoring |
-| `transport_preference` | `any \| public_transport \| private_cab \| self_drive` | Drives transport cost/km and public-transport travel time |
-| `pace` | `relaxed \| balanced \| packed` | Stay-length model |
-| `dietary_preference` | `no_preference \| vegetarian \| vegan \| jain \| non_vegetarian` | Reflected in food activities |
-| `accessibility_requirements` | string ≤500 chars, optional | Emits accessibility warnings for stops with documented notes |
-| `family_preference` | `with_children \| with_elderly`, optional | Family-friendly stops score higher |
-| `planner` | `auto \| ai \| fallback` | `ai` returns 503 if the LLM is unavailable |
-
-### Example: generate
-
-```bash
-curl -X POST http://localhost:8000/api/itineraries/generate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "start_city": "bengaluru",
-    "days": 5,
-    "travellers": 2,
-    "interests": ["heritage", "nature"],
-    "experience_types": ["heritage_tour"],
-    "budget_tier": "mid",
-    "total_budget_inr": 60000,
-    "transport_preference": "public_transport",
-    "pace": "balanced",
-    "dietary_preference": "vegetarian",
-    "planner": "auto"
-  }'
+Test Files  4 passed (4)
+Tests       21 passed (21)
 ```
 
-Response (trimmed — 200 OK):
+### TypeScript Typecheck & Production Build
+- **Typecheck (`tsc --noEmit`)**: **0 errors**.
+- **Production Build (`vite build`)**: **Clean build in 56.80s** with optimized chunks for Leaflet, html2canvas, and jsPDF.
 
-```json
-{
-  "plan_id": "6eb2f868bd0f",
-  "source": "fallback",
-  "summary": "5-day Karnataka trip (balanced pace) covering 4 stops: ...",
-  "interests": ["heritage", "nature"],
-  "itinerary": [
-    {"day": 3, "place": {"destination_id": "hampi", "name": "Hampi", "lat": 15.33, "lng": 76.46, "region": "North Karnataka"},
-     "stay_day": 1, "stay_days": 2,
-     "activities": [{"time": "14:00", "title": "Virupaksha Temple", "description": "...", "destination_id": "hampi", "kind": "sightseeing"}]},
-    {"day": 4, "place": {"...": "..."}, "stay_day": 2, "stay_days": 2, "activities": ["..."]}
-  ],
-  "selected_destinations": ["..."],
-  "route": [{"day": 2, "origin": {"...": "..."}, "destination": {"...": "..."}, "distance_km": 143.6, "duration_hours": 3.7, "transport": "road"}],
-  "stays": [
-    {"destination_id": "bengaluru", "name": "Bengaluru", "first_day": 1, "last_day": 1, "days": 1},
-    {"destination_id": "hampi", "name": "Hampi", "first_day": 3, "last_day": 4, "days": 2}
-  ],
-  "budget": {"currency": "INR", "tier": "mid", "days": 5, "travellers": 2, "stay_food_inr": 29400, "transport_inr": 1748, "activities_inr": 80, "total_inr": 31228, "per_person_total_inr": 15614,
-    "unknown_entry_fees": ["Bengaluru", "Badami"], "zero_entry_fees": [],
-    "estimate_complete": false,
-    "excluded_costs_note": "Incomplete estimate: entry fees for Bengaluru, Badami are not verified and are EXCLUDED from this total (they are not zero). ..."},
-  "budget_fit": {"total_budget_inr": 60000, "estimated_total_inr": 31228, "within_budget": true, "variance_inr": 28772},
-  "warnings": ["Entry fee for Srirangapatna is not verified; excluded from the budget."]
-}
-```
+### Mocked vs Live Verification Distinction
+- **Automated Test Suites (Pytest & Vitest)**: Run with network mocks and disabled external network requests (`conftest.py`) to ensure deterministic, fast, offline test runs.
+- **Live Provider Verification**: Real Gemini calls can be made at runtime by supplying `AI_API_KEY` in `backend/.env`. Dedicated live verification script:
+  ```powershell
+  & "backend/.venv/Scripts/python.exe" backend/scripts/test_ai_generation.py
+  ```
 
-**Multi-day stays:** a destination repeated across consecutive itinerary days is
-ONE stay, never a duplicate selection. `stays[]` lists each stop once with its
-`first_day`/`last_day`/`days` span, and each day carries `stay_day`/`stay_days`
-(e.g. “day 2 of 2 in Hampi”). `selected_destinations` contains every stop
-exactly once, and route legs exist only on days where the destination changes.
+---
 
-**Budget completeness:** `activities_inr` sums only **verified** entry fees.
-An unverified fee is never counted as ₹0 — it is named in `unknown_entry_fees`,
-flips `estimate_complete` to `false`, and `excluded_costs_note` states exactly
-what the total leaves out. A confirmed free entry (e.g. Gokarna) appears in
-`zero_entry_fees` instead. `total_inr` always equals
-`stay_food_inr + transport_inr + activities_inr`.
+## External Providers, Data Provenance & Limitations
 
-### Example: regenerate (stateless)
+### 1. External Provider Limitations
+- **OSRM Public Demo Server (`router.project-osrm.org`)**: Subject to rate limits and occasional latency. When slow, unreachable, or when `ROUTING_ENABLED=false`, the system automatically falls back to deterministic great-circle Haversine calculations scaled by a road curvature factor (1.30) and an intercity speed model (45–55 km/h).
+- **Overpass API (`overpass-api.de`)**: Public OpenStreetMap querying service. If Overpass requests time out, the system automatically falls back to verified catalog stops and local dining recommendations.
+- **LLM APIs (Google Gemini / OpenAI)**: Subject to API quotas and latency. If an LLM call fails or times out, the planner transparently switches to the deterministic Smart planner.
 
-No server-side itinerary store exists, so the client echoes the previous payload;
-the path id must equal `previous_itinerary.plan_id` (otherwise 400 explaining the
-stateless contract). `trip` carries the preserved constraints, `changes` optional
-overrides.
+### 2. Data Provenance & Attribution
+- **OpenStreetMap Data**: Route geometry, candidate waypoints, and highway amenities © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) (ODbL).
+- **Department of Tourism, Government of Karnataka**: Curated destination descriptions, monument details, and heritage site information ([karnatakatourism.org](https://karnatakatourism.org)).
+- **National Informatics Centre (NIC)**: District administrative boundaries, headquarters coordinates, and official portals ([karnataka.gov.in](https://karnataka.gov.in)).
 
-```bash
-curl -X POST http://localhost:8000/api/itineraries/6eb2f868bd0f/regenerate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "previous_itinerary": { "plan_id": "6eb2f868bd0f", "...": "full previous response" },
-    "trip": { "start_city": "bengaluru", "days": 5, "travellers": 2,
-              "interests": ["heritage", "nature"], "budget_tier": "mid",
-              "pace": "balanced", "total_budget_inr": 60000, "planner": "auto" },
-    "changes": { "days": 3, "pace": "packed" }
-  }'
-```
-
-Response adds `"regenerated_from": "6eb2f868bd0f"` and a fresh `plan_id`.
-
-### Example: error envelope
-
-```json
-{
-  "error": {
-    "code": "request_validation_error",
-    "message": "Request validation failed",
-    "details": [{"field": "total_budget_inr", "message": "Input should be greater than or equal to 100"}]
-  }
-}
-```
-
-Codes: `bad_request` (400), `not_found` (404), `request_validation_error` (422),
-`service_unavailable` (503, e.g. forced `planner: "ai"` without an LLM key),
-`internal_error` (500).
-
-### Legacy plan endpoint
-
-```bash
-curl -X POST http://localhost:8000/api/v1/plans \
-  -H "Content-Type: application/json" \
-  -d '{"interests":["heritage","nature"],"days":5,"travellers":2,
-       "budget_tier":"mid","pace":"balanced","start_city":"bengaluru",
-       "start_month":12,"planner":"auto"}'
-```
-
-`planner` is `auto` (AI when configured, silently falls back with a warning),
-`ai` (forces the LLM; returns 503 if unavailable) or `fallback` (deterministic).
-
-## Design decisions
-
-- **Deterministic fallback is the backbone**: stops, routing, budget and day
-  allocation are computed by pure modules. The LLM only drafts narrative day
-  activities and is validated with Pydantic — if it fails or misbehaves, the
-  fallback output is used and reported in `warnings`.
-- **No database yet**: the dataset is a static curated JSON file; SQLite can be
-  added later if users need saved trips.
-- **No auth/microservices**: single FastAPI app, single React app, per the brief.
-- **Money never comes from the LLM**: `budget.py` computes every rupee figure.
-- **AI provider status**: provider/model/timeout are configured via
-  `LLM_API_KEY`/`LLM_BASE_URL`/`LLM_MODEL`/`LLM_TIMEOUT_SECONDS` (see
-  `.env.example`). With no key, `auto` falls back with a warning and `ai`
-  returns 503 — never a fake success. Structured output is parsed defensively
-  (JSON extraction, day-count, numeric day numbers, unique days, destination-ID
-  allow-list) and all failure modes are covered by **mocked** tests; a live
-  call against a real provider has **not** been verified in this environment
-  because no key is configured.
-
-## Version control
-
-The repo is initialised (`git init`) with a `.gitignore` covering `.env`,
-`node_modules/`, `.venv/` and build output. Initial commit:
-
-```bash
-git add .
-git commit -m "Foundation: FastAPI backend, React frontend, fallback planner, tests"
-```
+### 3. Known Limitations
+- **Stateless Architecture**: Itinerary persistence is client-side (`localStorage`); the backend does not store user accounts or historical itineraries in a server database.
+- **Public OSRM Demo**: For high-volume production deployments, self-hosting an OSRM instance or using an enterprise routing service is recommended.

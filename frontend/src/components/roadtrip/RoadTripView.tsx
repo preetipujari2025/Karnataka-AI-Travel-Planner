@@ -25,37 +25,37 @@ const ITEM_META: Record<
   ScheduledItem["item_type"],
   { icon: React.ComponentType<{ className?: string }>; label: string; tone: string }
 > = {
-  departure: { icon: Flag, label: "Departure", tone: "text-emerald-300" },
-  travel: { icon: Car, label: "Driving", tone: "text-slate-300" },
-  sightseeing: { icon: MapPin, label: "Visit", tone: "text-amber-300" },
-  meal: { icon: UtensilsCrossed, label: "Meal", tone: "text-orange-300" },
-  rest: { icon: Coffee, label: "Rest", tone: "text-sky-300" },
-  overnight: { icon: BedDouble, label: "Overnight", tone: "text-indigo-300" },
-  arrival: { icon: Sun, label: "Arrival", tone: "text-emerald-300" },
+  departure: { icon: Flag, label: "Departure", tone: "text-[#2d6a4f]" },
+  travel: { icon: Car, label: "Driving", tone: "text-[#556b60]" },
+  sightseeing: { icon: MapPin, label: "Visit", tone: "text-[#e08713]" },
+  meal: { icon: UtensilsCrossed, label: "Meal", tone: "text-[#e08713]" },
+  rest: { icon: Coffee, label: "Rest", tone: "text-[#2d6a4f]" },
+  overnight: { icon: BedDouble, label: "Overnight", tone: "text-[#2d6a4f]" },
+  arrival: { icon: Sun, label: "Arrival", tone: "text-[#e08713]" },
 };
 
 function ScheduleRow({ item }: { item: ScheduledItem }) {
   const meta = ITEM_META[item.item_type] ?? ITEM_META.travel;
   const Icon = meta.icon;
   return (
-    <div className="flex items-start gap-3 rounded-lg border border-white/5 bg-white/[0.02] px-3.5 py-2.5">
+    <div className="flex items-start gap-3 rounded-xl border border-[#e2ece5] bg-white px-3.5 py-2.5 shadow-xs">
       <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${meta.tone}`} />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-3">
-          <span className="font-mono text-[11px] text-amber-300">
+          <span className="font-mono text-[11px] text-[#2d6a4f] font-semibold">
             {item.start_time}–{item.end_time}
           </span>
-          <span className="text-sm font-semibold text-white">{item.name}</span>
-          <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500">
+          <span className="text-sm font-semibold text-[#1b2b22]">{item.name}</span>
+          <span className="text-[10px] font-mono uppercase tracking-wider text-[#556b60]">
             {meta.label} · {item.duration_minutes} min
           </span>
         </div>
-        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 text-[11px] text-slate-500">
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 text-[11px] text-[#556b60]">
           {item.detour_km != null && item.detour_km > 0 && (
             <span>+{item.detour_km.toFixed(1)} km detour</span>
           )}
           {item.verification_status && item.verification_status !== "not_applicable" && (
-            <span className="font-mono">{item.verification_status}</span>
+            <span className="font-mono text-[#2d6a4f]">{item.verification_status}</span>
           )}
         </div>
       </div>
@@ -94,10 +94,10 @@ export default function RoadTripView({ plan }: RoadTripViewProps) {
       {/* Header strip */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="font-serif text-2xl text-white">
+          <h2 className="font-serif text-2xl text-[#1b2b22]">
             {plan.route.origin.name} → {plan.route.destination.name}
           </h2>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-[#556b60]">
             {plan.days} days · {plan.route.distance_km.toFixed(0)} km main route (
             {plan.route.verified ? `live via ${plan.route.provider ?? "OSRM"}` : "estimated corridor"})
             {" · "}Plan #{plan.plan_id.slice(0, 8)}
@@ -107,7 +107,7 @@ export default function RoadTripView({ plan }: RoadTripViewProps) {
           type="button"
           onClick={handleDownload}
           disabled={downloading}
-          className="flex items-center gap-2 rounded-lg bg-amber-400 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-950 transition hover:bg-amber-300 disabled:opacity-50"
+          className="flex items-center gap-2 rounded-xl bg-[#2d6a4f] hover:bg-[#23533e] px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white transition disabled:opacity-50 shadow-md shadow-[#2d6a4f]/20 cursor-pointer"
         >
           <Download className="h-4 w-4" />
           {downloading ? "Preparing…" : "Download PDF"}
@@ -116,21 +116,21 @@ export default function RoadTripView({ plan }: RoadTripViewProps) {
 
       {/* Conflicts and rejections */}
       {(plan.conflicts.length > 0 || plan.rejected_stops.length > 0) && (
-        <div className="rounded-2xl border border-amber-400/30 bg-amber-400/5 p-5">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-amber-200">
-            <AlertTriangle className="h-4 w-4" /> Scheduling conflicts
+        <div className="rounded-2xl border border-[#e08713]/40 bg-[#fff9ed] p-5">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-[#8c5000]">
+            <AlertTriangle className="h-4 w-4 text-[#e08713]" /> Scheduling conflicts
           </h3>
           {plan.rejected_stops.length > 0 && (
             <ul className="mt-2 space-y-1.5">
               {plan.rejected_stops.map((stop) => (
-                <li key={stop.candidate_id} className="text-xs text-amber-100/90">
+                <li key={stop.candidate_id} className="text-xs text-[#6d3e00]">
                   <strong>{stop.name}</strong> — {stop.exclusion_reason}
                 </li>
               ))}
             </ul>
           )}
           {plan.conflicts.map((c, idx) => (
-            <p key={idx} className="mt-2 text-xs text-amber-100/80">
+            <p key={idx} className="mt-2 text-xs text-[#6d3e00]">
               {c}
             </p>
           ))}
@@ -138,7 +138,7 @@ export default function RoadTripView({ plan }: RoadTripViewProps) {
       )}
 
       {/* Map */}
-      <div className="h-[420px]">
+      <div className="h-[420px] rounded-2xl overflow-hidden border border-[#d8e6de] shadow-sm">
         <MapView
           stops={mapStops}
           route={routeLegs}
@@ -149,27 +149,27 @@ export default function RoadTripView({ plan }: RoadTripViewProps) {
 
       {/* Day-by-day schedule */}
       <section>
-        <h3 className="mb-4 text-xs font-mono uppercase tracking-widest text-amber-400">
+        <h3 className="mb-4 text-xs font-mono uppercase tracking-widest text-[#2d6a4f]">
           Day-by-day schedule
         </h3>
         <div className="space-y-5">
           {plan.itinerary.map((day) => (
-            <div key={day.day} className="rounded-2xl border border-white/10 bg-[#0a0f18] p-5">
+            <div key={day.day} className="rounded-2xl border border-[#d8e6de] bg-white/95 p-5 shadow-sm">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <span className="font-serif text-lg text-white">
+                  <span className="font-serif text-lg text-[#1b2b22]">
                     Day {day.day}
                     {day.date ? ` · ${day.date}` : ""}
                   </span>
-                  {day.title && <span className="ml-3 text-xs text-slate-400">{day.title}</span>}
+                  {day.title && <span className="ml-3 text-xs text-[#556b60]">{day.title}</span>}
                 </div>
-                <div className="flex items-center gap-3 text-[11px] font-mono text-slate-400">
+                <div className="flex items-center gap-3 text-[11px] font-mono text-[#556b60]">
                   <span className="flex items-center gap-1">
-                    <Car className="h-3.5 w-3.5 text-amber-400" />
+                    <Car className="h-3.5 w-3.5 text-[#e08713]" />
                     {Math.floor(day.driving_minutes / 60)}h {day.driving_minutes % 60}m driving
                   </span>
                   <span className="flex items-center gap-1">
-                    <Moon className="h-3.5 w-3.5 text-indigo-300" />
+                    <Moon className="h-3.5 w-3.5 text-[#2d6a4f]" />
                     {day.overnight_place.name}
                   </span>
                 </div>
@@ -180,9 +180,9 @@ export default function RoadTripView({ plan }: RoadTripViewProps) {
                 ))}
               </div>
               {day.notes.length > 0 && (
-                <ul className="mt-3 space-y-1 border-t border-white/5 pt-3">
+                <ul className="mt-3 space-y-1 border-t border-[#e2ece5] pt-3">
                   {day.notes.map((note, idx) => (
-                    <li key={idx} className="text-[11px] text-slate-500">
+                    <li key={idx} className="text-[11px] text-[#556b60]">
                       • {note}
                     </li>
                   ))}
@@ -194,44 +194,44 @@ export default function RoadTripView({ plan }: RoadTripViewProps) {
       </section>
 
       {/* Budget */}
-      <section className="rounded-2xl border border-white/10 bg-[#0a0f18] p-6">
-        <h3 className="mb-4 text-xs font-mono uppercase tracking-widest text-amber-400">
+      <section className="rounded-2xl border border-[#d8e6de] bg-white/95 p-6 shadow-sm">
+        <h3 className="mb-4 text-xs font-mono uppercase tracking-widest text-[#2d6a4f]">
           Budget — arithmetic from verified data only
         </h3>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl bg-white/5 p-4">
-            <p className="text-[10px] font-mono uppercase text-slate-500">Main route transport</p>
-            <p className="mt-1 font-serif text-xl text-white">{formatInr(plan.budget.transport_inr)}</p>
+          <div className="rounded-xl bg-[#f8faf9] border border-[#e2ece5] p-4">
+            <p className="text-[10px] font-mono uppercase text-[#556b60]">Main route transport</p>
+            <p className="mt-1 font-serif text-xl text-[#1b2b22]">{formatInr(plan.budget.transport_inr)}</p>
           </div>
-          <div className="rounded-xl bg-white/5 p-4">
-            <p className="text-[10px] font-mono uppercase text-slate-500">Stop detours</p>
-            <p className="mt-1 font-serif text-xl text-white">
+          <div className="rounded-xl bg-[#f8faf9] border border-[#e2ece5] p-4">
+            <p className="text-[10px] font-mono uppercase text-[#556b60]">Stop detours</p>
+            <p className="mt-1 font-serif text-xl text-[#1b2b22]">
               {formatInr(plan.budget.detour_transport_inr ?? 0)}
             </p>
           </div>
-          <div className="rounded-xl bg-white/5 p-4">
-            <p className="text-[10px] font-mono uppercase text-slate-500">Stay &amp; food (overnights)</p>
-            <p className="mt-1 font-serif text-xl text-white">{formatInr(plan.budget.stay_food_inr)}</p>
+          <div className="rounded-xl bg-[#f8faf9] border border-[#e2ece5] p-4">
+            <p className="text-[10px] font-mono uppercase text-[#556b60]">Stay &amp; food (overnights)</p>
+            <p className="mt-1 font-serif text-xl text-[#1b2b22]">{formatInr(plan.budget.stay_food_inr)}</p>
           </div>
-          <div className="rounded-xl bg-white/5 p-4">
-            <p className="text-[10px] font-mono uppercase text-slate-500">Meals on the road</p>
-            <p className="mt-1 font-serif text-xl text-white">{formatInr(plan.budget.meals_inr ?? 0)}</p>
+          <div className="rounded-xl bg-[#f8faf9] border border-[#e2ece5] p-4">
+            <p className="text-[10px] font-mono uppercase text-[#556b60]">Meals on the road</p>
+            <p className="mt-1 font-serif text-xl text-[#1b2b22]">{formatInr(plan.budget.meals_inr ?? 0)}</p>
           </div>
-          <div className="rounded-xl bg-white/5 p-4">
-            <p className="text-[10px] font-mono uppercase text-slate-500">Verified entry fees</p>
-            <p className="mt-1 font-serif text-xl text-white">{formatInr(plan.budget.activities_inr)}</p>
+          <div className="rounded-xl bg-[#f8faf9] border border-[#e2ece5] p-4">
+            <p className="text-[10px] font-mono uppercase text-[#556b60]">Verified entry fees</p>
+            <p className="mt-1 font-serif text-xl text-[#1b2b22]">{formatInr(plan.budget.activities_inr)}</p>
           </div>
-          <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/5 p-4">
-            <p className="text-[10px] font-mono uppercase text-emerald-300">Minimum practical total</p>
-            <p className="mt-1 font-serif text-xl text-emerald-200">
+          <div className="rounded-xl border border-[#2d6a4f]/30 bg-[#eef5f1] p-4">
+            <p className="text-[10px] font-mono uppercase text-[#2d6a4f] font-semibold">Minimum practical total</p>
+            <p className="mt-1 font-serif text-xl text-[#2d6a4f]">
               {plan.budget.minimum_total_inr != null ? formatInr(plan.budget.minimum_total_inr) : "—"}
             </p>
-            <p className="mt-1 text-[10px] text-slate-500">same trip without optional detours</p>
+            <p className="mt-1 text-[10px] text-[#556b60]">same trip without optional detours</p>
           </div>
-          <div className="rounded-xl border border-amber-400/40 bg-amber-400/10 p-4">
-            <p className="text-[10px] font-mono uppercase text-amber-300">Recommended total</p>
-            <p className="mt-1 font-serif text-xl text-white">{formatInr(plan.budget.total_inr)}</p>
-            <p className="mt-1 text-[10px] text-slate-400">
+          <div className="rounded-xl border border-[#e08713]/40 bg-[#fff9ed] p-4">
+            <p className="text-[10px] font-mono uppercase text-[#8c5000] font-semibold">Recommended total</p>
+            <p className="mt-1 font-serif text-xl text-[#8c5000]">{formatInr(plan.budget.total_inr)}</p>
+            <p className="mt-1 text-[10px] text-[#6d3e00]">
               {formatInr(plan.budget.per_person_total_inr)} per person
             </p>
           </div>
@@ -239,16 +239,16 @@ export default function RoadTripView({ plan }: RoadTripViewProps) {
             <div
               className={`rounded-xl border p-4 ${
                 plan.budget_fit.within_budget
-                  ? "border-emerald-400/30 bg-emerald-400/5"
-                  : "border-red-400/30 bg-red-400/5"
+                  ? "border-[#2d6a4f]/30 bg-[#eef5f1]"
+                  : "border-red-200 bg-red-50"
               }`}
             >
-              <p className="text-[10px] font-mono uppercase text-slate-400">
+              <p className="text-[10px] font-mono uppercase text-[#556b60]">
                 Your budget {formatInr(plan.budget_fit.total_budget_inr)}
               </p>
               <p
                 className={`mt-1 font-serif text-xl ${
-                  plan.budget_fit.within_budget ? "text-emerald-200" : "text-red-200"
+                  plan.budget_fit.within_budget ? "text-[#2d6a4f]" : "text-red-700"
                 }`}
               >
                 {plan.budget_fit.within_budget
@@ -260,26 +260,26 @@ export default function RoadTripView({ plan }: RoadTripViewProps) {
         </div>
 
         {!plan.budget.estimate_complete && (
-          <p className="mt-4 flex items-start gap-2 text-[11px] text-amber-300/90">
-            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <p className="mt-4 flex items-start gap-2 text-[11px] text-[#8c5000]">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#e08713]" />
             {plan.budget.excluded_costs_note ??
               "Some costs are not verified and are excluded — they are not counted as zero."}
           </p>
         )}
         {plan.budget.unknown_entry_fees.length > 0 && (
-          <p className="mt-2 text-[11px] text-slate-500">
+          <p className="mt-2 text-[11px] text-[#556b60]">
             Fees unknown (excluded): {plan.budget.unknown_entry_fees.join(", ")}
           </p>
         )}
         {(plan.budget.unknown_daily_costs ?? []).length > 0 && (
-          <p className="mt-1 text-[11px] text-slate-500">
+          <p className="mt-1 text-[11px] text-[#556b60]">
             Stay costs unknown (excluded): {plan.budget.unknown_daily_costs?.join(", ")}
           </p>
         )}
         {plan.budget.assumptions && plan.budget.assumptions.length > 0 && (
-          <ul className="mt-3 space-y-1 border-t border-white/5 pt-3">
+          <ul className="mt-3 space-y-1 border-t border-[#e2ece5] pt-3">
             {plan.budget.assumptions.map((a, idx) => (
-              <li key={idx} className="text-[11px] text-slate-500">
+              <li key={idx} className="text-[11px] text-[#556b60]">
                 • {a}
               </li>
             ))}
@@ -288,25 +288,25 @@ export default function RoadTripView({ plan }: RoadTripViewProps) {
       </section>
 
       {/* Warnings, assumptions, providers */}
-      <section className="rounded-2xl border border-white/10 bg-[#0a0f18] p-6">
-        <h3 className="mb-3 text-xs font-mono uppercase tracking-widest text-slate-400">
+      <section className="rounded-2xl border border-[#d8e6de] bg-white/95 p-6 shadow-sm">
+        <h3 className="mb-3 text-xs font-mono uppercase tracking-widest text-[#2d6a4f]">
           Honest data notes
         </h3>
         {plan.warnings.length > 0 && (
           <ul className="mb-3 space-y-1">
             {plan.warnings.map((w, idx) => (
-              <li key={idx} className="text-[11px] text-amber-300/90">⚠ {w}</li>
+              <li key={idx} className="text-[11px] text-[#8c5000]">⚠ {w}</li>
             ))}
           </ul>
         )}
         {plan.assumptions.length > 0 && (
           <ul className="mb-3 space-y-1">
             {plan.assumptions.map((a, idx) => (
-              <li key={idx} className="text-[11px] text-slate-500">• {a}</li>
+              <li key={idx} className="text-[11px] text-[#556b60]">• {a}</li>
             ))}
           </ul>
         )}
-        <p className="text-[10px] font-mono text-slate-600">
+        <p className="text-[10px] font-mono text-[#8da397]">
           Providers: {plan.providers.join(", ") || "local curated dataset"} · Stop/meal data may be
           under ODbL — attribution shown per stop in the selection panel.
         </p>

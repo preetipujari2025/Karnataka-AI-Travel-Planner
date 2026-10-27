@@ -33,18 +33,22 @@ export default function MapView({
   useEffect(() => {
     if (!containerRef.current || stops.length === 0) return;
 
+    const container = containerRef.current;
     if (mapInstanceRef.current) {
       mapInstanceRef.current.remove();
       mapInstanceRef.current = null;
     }
+    if ((container as unknown as { _leaflet_id?: number })._leaflet_id) {
+      delete (container as unknown as { _leaflet_id?: number })._leaflet_id;
+    }
 
-    const map = L.map(containerRef.current, {
+    const map = L.map(container, {
       scrollWheelZoom: false,
       zoomControl: true,
     });
     mapInstanceRef.current = map;
 
-    // OpenStreetMap tile layer
+    // Clean, readable OpenStreetMap tile layer
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution:
@@ -78,8 +82,8 @@ export default function MapView({
               }
               <div class="flex items-center justify-center w-8 h-8 rounded-full border-2 ${
                 isSelected
-                  ? "border-amber-300 bg-amber-400 text-slate-950 font-extrabold shadow-lg shadow-amber-400/50 scale-110"
-                  : "border-white bg-[#0f172a] text-amber-400 font-bold shadow-md shadow-black"
+                  ? "border-white bg-gradient-to-br from-[#f5a623] to-[#e08713] text-white font-extrabold shadow-lg shadow-[#e08713]/40 scale-110"
+                  : "border-white bg-[#2d6a4f] text-white font-bold shadow-md shadow-[#2d6a4f]/30"
               } text-xs transition-transform cursor-pointer">
                 ${index + 1}
               </div>
@@ -95,14 +99,14 @@ export default function MapView({
       });
 
       marker.bindPopup(
-        `<div style="font-family: system-ui; padding: 6px; color: #0f172a; min-width: 160px;">
-          <div style="font-size: 11px; font-weight: 700; color: #d97706; text-transform: uppercase;">Stop ${
+        `<div style="font-family: 'Inter', system-ui, sans-serif; padding: 8px; color: #14231b; min-width: 170px;">
+          <div style="font-size: 11px; font-weight: 700; color: #2d6a4f; text-transform: uppercase; letter-spacing: 0.5px;">Stop ${
             index + 1
           } • ${stop.region}</div>
-          <strong style="font-size: 15px; color: #0f172a; display: block; margin-top: 2px;">${
+          <strong style="font-size: 15px; color: #14231b; display: block; margin-top: 2px; font-family: 'Playfair Display', Georgia, serif;">${
             stop.name
           }</strong>
-          <p style="font-size: 12px; margin: 6px 0 0; color: #475569; line-height: 1.4;">${
+          <p style="font-size: 12px; margin: 6px 0 0; color: #35483d; line-height: 1.45;">${
             stop.description
           }</p>
         </div>`
@@ -116,9 +120,9 @@ export default function MapView({
     // Draw route if legs are returned (or the real road polyline when available)
     if (geometry && geometry.length >= 2) {
       L.polyline(geometry as L.LatLngExpression[], {
-        color: "#f59e0b",
-        weight: 4,
-        opacity: 0.9,
+        color: "#2d6a4f",
+        weight: 4.5,
+        opacity: 0.92,
       }).addTo(map);
     } else if (route.length > 0) {
       const path: L.LatLngExpression[] = [];
@@ -128,7 +132,7 @@ export default function MapView({
       });
 
       L.polyline(path, {
-        color: "#f59e0b",
+        color: "#e08713",
         weight: 3.5,
         dashArray: "6 6",
         opacity: 0.9,
@@ -148,6 +152,9 @@ export default function MapView({
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
+      }
+      if (container) {
+        delete (container as unknown as { _leaflet_id?: number })._leaflet_id;
       }
     };
   }, [stops, route, geometry, selectedStopIndex, onSelectStop]);
@@ -175,25 +182,25 @@ export default function MapView({
   }, [selectedStopIndex, stops]);
 
   return (
-    <div className="relative h-full w-full rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-[#0b1120]">
-      <div ref={containerRef} className="h-full w-full dark-leaflet-tiles" aria-label="Trip route map" />
+    <div className="relative h-full w-full rounded-3xl overflow-hidden border border-[#cbe1d5] shadow-lg bg-[#f6f8f6]">
+      <div ref={containerRef} className="h-full w-full" aria-label="Trip route map" />
 
       {/* Map Route Metadata Overlay Pill */}
-      <div className="absolute top-4 left-4 z-[400] flex flex-wrap items-center gap-2 rounded-xl glass-panel px-3.5 py-2 text-xs backdrop-blur-md border border-white/10 shadow-lg">
-        <span className="flex h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-        <span className="font-mono text-slate-300">
+      <div className="absolute top-4 left-4 z-[400] flex flex-wrap items-center gap-2 rounded-2xl bg-white/92 backdrop-blur-md px-4 py-2 text-xs border border-[#cbe1d5] shadow-md text-[#14231b]">
+        <span className="flex h-2 w-2 rounded-full bg-[#2d6a4f] animate-pulse" />
+        <span className="font-semibold text-[#14231b]">
           {geometry && geometry.length >= 2
             ? `${geometryVerified ? "Live road route" : "Estimated route corridor"} • ${stops.length} stops`
             : route.length > 0
-            ? `Road Corridors (Approximate connections • Driving: ${Math.round(totalDistance)} km, ~${formatDuration(totalHours)})`
-            : "Approximate Direct Connections (Straight lines)"}
+            ? `Road Corridors (Driving: ${Math.round(totalDistance)} km, ~${formatDuration(totalHours)})`
+            : "Approximate Direct Connections"}
         </span>
-        <span className="text-slate-500">•</span>
-        <span className="text-slate-400">{stops.length} Waypoints</span>
+        <span className="text-[#9ab5a4]">•</span>
+        <span className="text-[#35483d] font-medium">{stops.length} Waypoints</span>
       </div>
 
       {/* Interactive Hint */}
-      <div className="absolute bottom-3 right-3 z-[400] hidden sm:block rounded-lg bg-black/70 px-2.5 py-1 text-[10px] font-mono text-slate-400 backdrop-blur">
+      <div className="absolute bottom-3 right-3 z-[400] hidden sm:block rounded-xl bg-white/90 px-3 py-1.5 text-[11px] font-medium text-[#35483d] border border-[#cbe1d5] shadow-xs backdrop-blur-xs">
         Click waypoint to inspect itinerary stop
       </div>
     </div>

@@ -58,21 +58,38 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+_CIRCUIT_OPEN_UNTIL: float = 0.0
+_CIRCUIT_COOLDOWN_SECONDS: float = 60.0
+
+
 def _run_query(ql: str) -> list[dict]:
-    """POST an Overpass QL query and return elements; raises on any failure."""
+    """POST an Overpass QL query and return elements; raises on any failure with circuit breaker."""
+    global _CIRCUIT_OPEN_UNTIL
     settings = get_settings()
     if not settings.routing_enabled:
         raise RuntimeError("external providers disabled")
-    timeout = min(6.0, settings.provider_timeout_seconds)
-    response = httpx.post(
-        settings.overpass_base_url,
-        data={"data": ql},
-        timeout=timeout,
-        headers={"User-Agent": "KarnatakaTravelPlanner/1.0 (research prototype)"},
-    )
-    response.raise_for_status()
-    payload = response.json()
-    return [el for el in payload.get("elements", []) if el.get("type") == "node"]
+    now = __import__("time").time()
+    if now < _CIRCUIT_OPEN_UNTIL:
+        raise RuntimeError("Overpass circuit breaker is open (upstream degraded)")
+    timeout = min(3.0, settings.provider_timeout_seconds)
+    try:
+        response = httpx.post(
+            settings.overpass_base_url,
+            data={"data": ql},
+            timeout=timeout,
+            headers={"User-Agent": "KarnatakaTravelPlanner/1.0 (research prototype)"},
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return [el for el in payload.get("elements", []) if el.get("type") == "node"]
+    except Exception as exc:
+        _CIRCUIT_OPEN_UNTIL = __import__("time").time() + _CIRCUIT_COOLDOWN_SECONDS
+        logger.warning(
+            "Overpass query failed (%s); tripping circuit breaker for %ds",
+            exc,
+            int(_CIRCUIT_COOLDOWN_SECONDS),
+        )
+        raise
 
 
 def _bbox_for_circle(lat: float, lng: float, radius_km: float) -> tuple[float, float, float, float]:

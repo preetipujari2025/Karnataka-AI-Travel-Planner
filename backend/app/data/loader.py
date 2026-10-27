@@ -104,10 +104,53 @@ def dataset_updated() -> str:
     return load_dataset()[0]
 
 
+COMMON_ALIASES: dict[str, str] = {
+    "coorg": "madikeri",
+    "gokak": "gokak-falls",
+    "ooty": "bandipur",  # Karnataka side of the border along NH-766 / Nilgiris
+    "ooty-border": "bandipur",
+    "mysuru-ooty": "bandipur",
+    "jog": "jog-falls",
+    "br-hills": "b-r-hills",
+    "biligiriranga": "b-r-hills",
+    "nagarhole": "kabini",
+    "chickmagalur": "chikkamagaluru",
+    "chikmagalur": "chikkamagaluru",
+    "mangalore": "mangaluru",
+    "bangalore": "bengaluru",
+    "mysore": "mysuru",
+    "hubli": "hubballi",
+    "belgaum": "belagavi",
+    "gulbarga": "kalaburagi",
+    "bijapur": "vijayapura",
+    "bellary": "ballari",
+    "shimoga": "shivamogga",
+    "tumkur": "tumakuru",
+    "bagalkot": "bagalkote",
+    "davangere": "davanagere",
+    "hospet": "hampi",
+    "hosapete": "hampi",
+    "vijayanagara": "hampi",
+    "yadgiri": "yadgir",
+    "ramanagar": "bengaluru-south",
+    "ramanagara": "bengaluru-south",
+    "chamarajanagar": "chamarajanagara",
+    "chikkaballapur": "chikkaballapura",
+    "chikballapur": "chikkaballapura",
+    "udipi": "udupi",
+    "dharwar": "dharwad",
+    "karwar": "karwar",
+    "north-canara": "karwar",
+    "south-canara": "mangaluru",
+}
+
+
 def get_destination(destination_id: str) -> Optional[DestinationRecord]:
     wanted = destination_id.strip().lower()
     if wanted.startswith("district-"):
         wanted = wanted[len("district-"):]
+
+    wanted = COMMON_ALIASES.get(wanted, wanted)
 
     for destination in load_dataset()[1]:
         if destination.id == wanted:
@@ -116,6 +159,9 @@ def get_destination(destination_id: str) -> Optional[DestinationRecord]:
 
     if store.is_database_populated():
         res = store.get_destination(wanted)
+        if res is not None:
+            return res
+        res = store.find_destination_by_name(wanted)
         if res is not None:
             return res
 

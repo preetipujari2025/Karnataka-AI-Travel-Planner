@@ -21,7 +21,7 @@ import httpx
 from pydantic import BaseModel, Field, ValidationError
 
 from app.config import Settings, get_settings
-from app.data.loader import get_destination
+from app.data.loader import all_destinations, get_destination
 from app.schemas import (
     ActivityKind,
     DayActivity,
@@ -104,6 +104,7 @@ class AIActivityDraft(BaseModel):
     title: str = Field(min_length=1, description="Concise activity title")
     description: str = Field(min_length=1, description="Specific description with local context")
     kind: ActivityKind = Field(default=ActivityKind.sightseeing)
+    cost_inr: Optional[int] = Field(default=None, description="Optional activity cost in INR")
 
 
 class AIDayDraft(BaseModel):
@@ -132,6 +133,7 @@ class AIPlanDraft(BaseModel):
     destination_explanations: list[AIDestinationExplanationDraft] = Field(default_factory=list)
     practical_tips: list[str] = Field(default_factory=list)
     suggested_substitutions: list[AISuggestedSubstitutionDraft] = Field(default_factory=list)
+    estimated_cost_inr: Optional[int] = Field(default=None, description="Optional total trip cost in INR")
 
 
 class AIPersonalizationResult(NamedTuple):
@@ -280,7 +282,7 @@ class OpenAIProvider(AIProvider):
         api_key: str,
         base_url: str = "https://api.openai.com/v1",
         model: str = "gpt-4o-mini",
-        timeout_seconds: float = 30.0,
+        timeout_seconds: float = 20.0,
         client: Optional[httpx.Client] = None,
     ) -> None:
         self.api_key = api_key
@@ -311,6 +313,7 @@ class OpenAIProvider(AIProvider):
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
+            "x-goog-api-key": self.api_key,
         }
 
         try:
@@ -359,7 +362,7 @@ class GeminiProvider(AIProvider):
         api_key: str,
         base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai",
         model: str = "gemini-1.5-flash",
-        timeout_seconds: float = 30.0,
+        timeout_seconds: float = 20.0,
         client: Optional[httpx.Client] = None,
     ) -> None:
         self.delegate = OpenAIProvider(
@@ -461,18 +464,18 @@ def get_ai_provider(
         return MockAIProvider()
     elif provider_type == "gemini":
         return GeminiProvider(
-            api_key=cfg.llm_api_key,
-            base_url=cfg.llm_base_url,
-            model=cfg.llm_model,
-            timeout_seconds=cfg.llm_timeout_seconds,
+            api_key=cfg.ai_api_key,
+            base_url=cfg.ai_base_url,
+            model=cfg.ai_model,
+            timeout_seconds=cfg.ai_timeout_seconds,
             client=client,
         )
     else:  # default "openai" or OpenAI-compatible
         return OpenAIProvider(
-            api_key=cfg.llm_api_key,
-            base_url=cfg.llm_base_url,
-            model=cfg.llm_model,
-            timeout_seconds=cfg.llm_timeout_seconds,
+            api_key=cfg.ai_api_key,
+            base_url=cfg.ai_base_url,
+            model=cfg.ai_model,
+            timeout_seconds=cfg.ai_timeout_seconds,
             client=client,
         )
 
@@ -563,7 +566,8 @@ def validate_and_map_ai_plan(
             f"LLM returned duplicate day numbers: {sorted(day_numbers)}"
         )
 
-    # Constraint Check 3: Destination IDs must strictly exist in the supplied catalog
+    # Constraint Check 3: Destination IDs must strictly exist in the 38 curated catalog and allocated stops
+    curated_ids = {d.id for d in all_destinations()}
     allowed_stop_ids = {d.id for d in stops}
     all_catalog_ids = {d.id for d in stops} | {d.id for d in candidate_catalog}
     stops_by_id = {d.id: d for d in stops}
@@ -574,9 +578,36 @@ def validate_and_map_ai_plan(
     allocation = {day: d.id for day, d in nightly_plan}
 
     for day_draft in draft.days:
+        if day_draft.destination_id not in curated_ids:
+            raise AIValidationError(
+                f"LLM used unknown destination '{day_draft.destination_id}' not in curated destinations on day {day_draft.day}"
+            )
         if day_draft.destination_id not in allowed_stop_ids:
             raise AIValidationError(
                 f"LLM used unknown destination '{day_draft.destination_id}' on day {day_draft.day}"
+            )
+
+    # Constraint Check 4: Budget limit check (reject if AI proposes costs exceeding user budget)
+    total_budget = getattr(request, "total_budget_inr", None)
+    if total_budget is not None and total_budget > 0:
+        proposed_cost = (
+            data.get("estimated_cost_inr")
+            or data.get("total_cost")
+            or data.get("total_cost_inr")
+            or data.get("budget_estimate")
+            or draft.estimated_cost_inr
+        )
+        if proposed_cost is not None and proposed_cost > total_budget:
+            raise AIValidationError(
+                f"AI plan proposed cost INR {proposed_cost:,} exceeds budget limit INR {total_budget:,}"
+            )
+
+        activity_cost_sum = sum(
+            act.cost_inr for day_draft in draft.days for act in day_draft.activities if act.cost_inr
+        )
+        if activity_cost_sum > total_budget:
+            raise AIValidationError(
+                f"AI plan activity costs total INR {activity_cost_sum:,} which exceeds budget limit INR {total_budget:,}"
             )
 
     # Normalise day activities and enforce deterministic place allocation
@@ -614,14 +645,35 @@ def validate_and_map_ai_plan(
             region=dest_record.region,
         )
 
+        from app.services.fallback_planner import get_food_suggestion, get_local_tip
+        from app.schemas import DietaryPreference
+        diet = getattr(request, "dietary_preference", DietaryPreference.no_preference)
+        food_sugg = get_food_suggestion(dest_record, diet)
+        loc_tip = get_local_tip(dest_record)
+        if day_draft.travel_tips:
+            tips = [t.strip() for t in day_draft.travel_tips if t.strip()]
+        else:
+            tips = [loc_tip] if loc_tip else []
+
+        act_titles = [a.title for a in activities]
+        h1 = act_titles[0] if act_titles else dest_record.name
+        h2 = act_titles[1] if len(act_titles) > 1 else (dest_record.highlights[0] if dest_record.highlights else dest_record.name)
+        h3 = act_titles[2] if len(act_titles) > 2 else "local markets and sunset viewpoints"
+
         day_plans.append(
             DayPlan(
                 day=day_num,
                 place=place,
                 day_title=day_draft.day_title.strip() or f"Day {day_num}: Exploring {dest_record.name}",
                 narrative=day_draft.narrative,
+                morning_plan=f"08:30 AM – 12:30 PM: Morning exploration: {h1}.",
+                afternoon_plan=f"02:00 PM – 05:00 PM: Afternoon discovery: {h2}.",
+                evening_plan=f"06:00 PM – 09:00 PM: Evening leisure & dining: {h3}.",
+                travel_time=f"Local transit: ~15–25 mins between attractions in {dest_record.name}",
+                food_suggestion=food_sugg,
+                local_tip=loc_tip,
                 activities=activities,
-                travel_tips=[t.strip() for t in day_draft.travel_tips if t.strip()],
+                travel_tips=tips,
             )
         )
 
@@ -631,6 +683,10 @@ def validate_and_map_ai_plan(
     # Destination explanations: map to typed DestinationSuitability
     dest_explanations: list[DestinationSuitability] = []
     for exp in draft.destination_explanations:
+        if exp.destination_id not in curated_ids:
+            raise AIValidationError(
+                f"LLM used unknown destination '{exp.destination_id}' not in curated catalog in explanations"
+            )
         if exp.destination_id in stops_by_id:
             dest_rec = stops_by_id[exp.destination_id]
             dest_explanations.append(
@@ -646,6 +702,14 @@ def validate_and_map_ai_plan(
     for sub in draft.suggested_substitutions:
         curr_id = sub.current_destination_id.strip()
         sugg_id = sub.suggested_destination_id.strip()
+        if curr_id and curr_id not in curated_ids:
+            raise AIValidationError(
+                f"LLM suggested unknown destination '{curr_id}' not in curated catalog"
+            )
+        if sugg_id and sugg_id not in curated_ids:
+            raise AIValidationError(
+                f"LLM suggested unknown destination '{sugg_id}' not in curated catalog"
+            )
         if curr_id in all_catalog_ids and sugg_id in all_catalog_ids and curr_id != sugg_id:
             curr_dest = catalog_by_id[curr_id]
             sugg_dest = catalog_by_id[sugg_id]
@@ -700,23 +764,43 @@ def generate_ai_itinerary(
     candidates = candidate_catalog or []
     user_prompt = build_user_prompt(request, stops, nightly_plan, candidates)
 
-    logger.info(
-        "Requesting AI personalization via provider=%s for %s days, stops=%s",
-        settings.ai_provider,
-        request.days,
-        [d.id for d in stops],
-    )
+    last_validation_error: Optional[AIValidationError] = None
+    for attempt in range(1, 3):
+        prompt = user_prompt
+        if attempt == 2 and last_validation_error is not None:
+            prompt += (
+                f"\n\nIMPORTANT CORRECTION (Attempt {attempt}/2):\n"
+                f"Your previous output was invalid: {last_validation_error}\n"
+                f"You MUST output ONLY a valid JSON object strictly adhering to the schema and approved catalog IDs."
+            )
 
-    raw_response = actual_provider.generate(
-        system_prompt=SYSTEM_PROMPT,
-        user_prompt=user_prompt,
-    )
+        logger.info(
+            "Requesting AI personalization (attempt %d/2) via provider=%s for %s days, stops=%s",
+            attempt,
+            settings.ai_provider,
+            request.days,
+            [d.id for d in stops],
+        )
 
-    return validate_and_map_ai_plan(
-        raw_response=raw_response,
-        request=request,
-        stops=stops,
-        nightly_plan=nightly_plan,
-        candidate_catalog=candidates,
-        provider_name=settings.ai_provider,
-    )
+        raw_response = actual_provider.generate(
+            system_prompt=SYSTEM_PROMPT,
+            user_prompt=prompt,
+        )
+
+        try:
+            return validate_and_map_ai_plan(
+                raw_response=raw_response,
+                request=request,
+                stops=stops,
+                nightly_plan=nightly_plan,
+                candidate_catalog=candidates,
+                provider_name=settings.ai_provider,
+            )
+        except AIValidationError as exc:
+            last_validation_error = exc
+            logger.warning("AI validation failed on attempt %d/2: %s", attempt, exc)
+            if attempt >= 2:
+                raise
+
+    if last_validation_error is not None:
+        raise last_validation_error

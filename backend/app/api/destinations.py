@@ -34,13 +34,14 @@ router = APIRouter(tags=["destinations"])
 INTEREST_META: list[InterestMeta] = [
     InterestMeta(value=Interest.heritage, label="Heritage", description="Forts, temples, ruins and museums"),
     InterestMeta(value=Interest.nature, label="Nature", description="Hills, waterfalls, forests and trails"),
-    InterestMeta(value=Interest.beach, label="Beach", description="Coast, islands and seaside towns"),
+    InterestMeta(value=Interest.coffee_hills, label="Coffee & Hills", description="Coffee estates, misty ridges and ghats"),
+    InterestMeta(value=Interest.wildlife, label="Wildlife", description="Tiger reserves, safaris and birding"),
+    InterestMeta(value=Interest.beach, label="Beaches", description="Coast, islands and seaside cliffs"),
+    InterestMeta(value=Interest.spirituality, label="Spiritual", description="Temples, mathas and pilgrim towns"),
+    InterestMeta(value=Interest.food, label="Food", description="Regional cuisine, coastal seafood and café culture"),
     InterestMeta(value=Interest.adventure, label="Adventure", description="Rafting, trekking and jungle activities"),
-    InterestMeta(value=Interest.spirituality, label="Spirituality", description="Temples, mathas and pilgrim towns"),
-    InterestMeta(value=Interest.wildlife, label="Wildlife", description="Safaris and birding"),
-    InterestMeta(value=Interest.food, label="Food", description="Regional cuisine and café culture"),
     InterestMeta(value=Interest.urban, label="Urban", description="City life, markets and nightlife"),
-    InterestMeta(value=Interest.photography, label="Photography", description="Scenic and photogenic spots"),
+    InterestMeta(value=Interest.photography, label="Photography", description="Scenic and photogenic viewpoints"),
 ]
 
 PACE_NOTES = {

@@ -41,14 +41,14 @@ export async function generateItineraryPDF(
 
   let y = margin;
 
-  // Colors
-  const COLOR_PRIMARY_DARK = [15, 23, 42]; // #0f172a (Slate 900)
-  const COLOR_SECONDARY_DARK = [30, 41, 59]; // #1e293b (Slate 800)
-  const COLOR_GOLD = [217, 119, 6]; // #d97706 (Amber 600)
-  const COLOR_GOLD_LIGHT = [254, 243, 199]; // #fef3c7 (Amber 100)
-  const COLOR_TEXT_MUTED = [100, 116, 139]; // #64748b (Slate 500)
-  const COLOR_CARD_BG = [248, 250, 252]; // #f8fafc (Slate 50)
-  const COLOR_CARD_BORDER = [226, 232, 240]; // #e2e8f0 (Slate 200)
+  // Colors: tea-leaf green, dark grey-green, golden sunrise, and warm cream
+  const COLOR_PRIMARY_DARK = [23, 40, 31]; // #17281f (Dark grey-green text)
+  const COLOR_SECONDARY_DARK = [45, 106, 79]; // #2d6a4f (Tea-leaf green)
+  const COLOR_GOLD = [224, 135, 19]; // #e08713 (Soft golden sunrise tone)
+  const COLOR_GOLD_LIGHT = [254, 247, 238]; // #fef7ee (Soft sunrise tint)
+  const COLOR_TEXT_MUTED = [94, 116, 103]; // #5e7467 (Muted grey-green)
+  const COLOR_CARD_BG = [248, 251, 248]; // #f8fbf8 (Warm cream / gentle mint)
+  const COLOR_CARD_BORDER = [203, 225, 213]; // #cbe1d5 (Delicate mint border)
 
   // Page break tracker
   function ensureSpace(neededMm: number) {
@@ -95,9 +95,8 @@ export async function generateItineraryPDF(
 
   // Source Badge on Top Right
   const sourceLabel =
-    plan.source === "ai"
-      ? `AI Personalized (${plan.ai_provider || "Model"})`
-      : "Deterministic Verified Planner";
+    plan.planner_label ||
+    (plan.source === "ai" ? "AI-personalized" : "Smart planner");
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(203, 213, 225); // Slate 300

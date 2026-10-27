@@ -547,6 +547,19 @@ def get_destination(destination_id: str, db_path: Optional[Path] = None) -> Opti
         return _row_to_destination(row)
 
 
+def find_destination_by_name(name: str, db_path: Optional[Path] = None) -> Optional[DestinationRecord]:
+    clean = name.strip().lower().replace("-", " ")
+    with get_connection(db_path) as conn:
+        cursor = conn.execute(
+            "SELECT * FROM destinations WHERE LOWER(id) LIKE ? OR LOWER(name) LIKE ? LIMIT 1",
+            (f"%{clean}%", f"%{clean}%"),
+        )
+        row = cursor.fetchone()
+        if not row:
+            return None
+        return _row_to_destination(row)
+
+
 def list_destinations(
     district_id: Optional[str] = None,
     region: Optional[str] = None,

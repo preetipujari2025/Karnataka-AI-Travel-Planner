@@ -10,6 +10,7 @@ import {
   Route as RouteIcon,
   Search,
   AlertCircle,
+  RotateCcw,
 } from "lucide-react";
 import { discoverRoute, fetchMeta, planRoadTrip } from "../api/client";
 import type {
@@ -28,6 +29,8 @@ import StartLocationSelector from "../components/planner/StartLocationSelector";
 import RouteDiscoveryPanel from "../components/roadtrip/RouteDiscoveryPanel";
 import RoadTripView from "../components/roadtrip/RoadTripView";
 import { defaultSelectedMealIds, defaultSelectedStopIds } from "../lib/roadtrip";
+import { DEFAULT_START_HUBS } from "../lib/destinationsData";
+import type { DestinationSummary } from "../api/types";
 
 type Stage = "form" | "discovering" | "selecting" | "planning" | "planned";
 
@@ -79,6 +82,7 @@ export default function RoadTripPlannerPage() {
   const [selectedMealIds, setSelectedMealIds] = useState<string[]>([]);
   const [plan, setPlan] = useState<RoadTripPlanResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [lastFailedAction, setLastFailedAction] = useState<"discover" | "plan" | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -88,7 +92,10 @@ export default function RoadTripPlannerPage() {
     return () => controller.abort();
   }, []);
 
-  const cities = meta?.start_cities ?? [];
+  const cities: DestinationSummary[] =
+    meta?.start_cities && meta.start_cities.length > 0
+      ? meta.start_cities
+      : (DEFAULT_START_HUBS as unknown as DestinationSummary[]);
 
   const discoveryRequest = useMemo(() => {
     const daysInt = Math.max(1, Math.round(days));
@@ -160,6 +167,7 @@ export default function RoadTripPlannerPage() {
   async function handleDiscover(refresh = false) {
     if (startCity === finalDestination) {
       setErrorMessage("Pick two different places — origin and destination must differ.");
+      setLastFailedAction("discover");
       return;
     }
     setStage("discovering");
@@ -174,6 +182,7 @@ export default function RoadTripPlannerPage() {
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       setErrorMessage((err as Error).message || "Route discovery failed.");
+      setLastFailedAction("discover");
       setStage("form");
     }
   }
@@ -194,6 +203,7 @@ export default function RoadTripPlannerPage() {
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       setErrorMessage((err as Error).message || "Planning failed.");
+      setLastFailedAction("plan");
       setStage("selecting");
     }
   }
@@ -201,24 +211,24 @@ export default function RoadTripPlannerPage() {
   const busy = stage === "discovering" || stage === "planning";
 
   return (
-    <div className="min-h-screen bg-[#070b12] text-slate-100">
+    <div className="min-h-screen bg-[#fcfbf9] text-[#1b2b22]">
       {/* Top nav */}
-      <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#070b12]/92 px-6 py-4 backdrop-blur-md">
+      <nav className="sticky top-0 z-50 border-b border-[#e2ece5] bg-[#fcfbf9]/95 px-6 py-4 backdrop-blur-md shadow-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <Link
             to="/"
-            className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-slate-300 hover:text-amber-400 transition-colors"
+            className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#2d6a4f] hover:text-[#1b2b22] transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Karnataka Trails AI</span>
           </Link>
-          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-amber-400">
+          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#2d6a4f] font-semibold">
             <RouteIcon className="h-4 w-4" />
             <span className="hidden sm:inline">Road Trip Planner</span>
           </div>
           <Link
             to="/plan"
-            className="text-xs font-mono uppercase tracking-widest text-slate-300 hover:text-amber-400 transition-colors"
+            className="text-xs font-mono uppercase tracking-widest text-[#556b60] hover:text-[#2d6a4f] transition-colors"
           >
             Classic Planner
           </Link>
@@ -228,21 +238,57 @@ export default function RoadTripPlannerPage() {
       <main className="mx-auto max-w-6xl px-6 py-10 space-y-8">
         {/* Error notice */}
         {errorMessage && (
-          <div className="rounded-xl border border-red-500/30 bg-red-950/40 p-4 text-xs text-red-200 flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
-            <div>
-              <strong className="block font-medium">Something went wrong</strong>
-              <span>{errorMessage}</span>
+          <div className="rounded-2xl border border-[#e08713]/40 bg-[#fff9ed] p-4 sm:p-5 text-[#8c5000] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="p-2.5 rounded-xl bg-[#e08713]/15 border border-[#e08713]/30 text-[#e08713] shrink-0 mt-0.5">
+                <AlertCircle className="h-5 w-5" />
+              </div>
+              <div>
+                <strong className="block text-sm font-semibold text-[#8c5000]">
+                  {lastFailedAction === "plan" ? "Unable to Complete Road Trip Schedule" : "Route Discovery Notice"}
+                </strong>
+                <p className="mt-1 text-xs text-[#6d3e00] leading-relaxed">
+                  {errorMessage}
+                </p>
+                <p className="mt-1 text-[11px] text-[#8c5000] font-medium">
+                  Your route selections and travel preferences are safely preserved below.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setErrorMessage(null);
+                  if (lastFailedAction === "plan") {
+                    handlePlan();
+                  } else {
+                    handleDiscover();
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#2d6a4f] text-white font-semibold text-xs hover:bg-[#23533e] transition-all shadow-md active:scale-95 cursor-pointer"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                Try again
+              </button>
+              <button
+                type="button"
+                onClick={() => setErrorMessage(null)}
+                className="px-3 py-2 rounded-xl border border-[#d8e6de] text-xs text-[#556b60] hover:text-[#1b2b22] hover:bg-white transition-colors cursor-pointer"
+                title="Dismiss message"
+              >
+                Dismiss
+              </button>
             </div>
           </div>
         )}
 
         {/* Journey form — always visible */}
-        <section className="rounded-2xl border border-white/10 bg-[#0a0f18] p-6 space-y-6">
+        <section className="rounded-2xl border border-[#d8e6de] bg-white/95 p-6 space-y-6 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h1 className="font-serif text-2xl text-white">Plan a road trip between any two places</h1>
-              <p className="mt-1 text-xs text-slate-400">
+              <h1 className="font-serif text-2xl text-[#1b2b22]">Plan a road trip between any two places</h1>
+              <p className="mt-1 text-xs text-[#556b60]">
                 We trace the real road, find verified stops along the corridor, and schedule only
                 what fits. Nothing is invented.
               </p>
@@ -251,7 +297,7 @@ export default function RoadTripPlannerPage() {
               <button
                 type="button"
                 onClick={() => setStage("form")}
-                className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-300 hover:text-white"
+                className="rounded-lg border border-[#d8e6de] bg-white px-3 py-1.5 text-xs text-[#556b60] hover:text-[#1b2b22] hover:bg-[#f4f7f5]"
               >
                 Edit journey
               </button>
@@ -260,8 +306,8 @@ export default function RoadTripPlannerPage() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5 text-amber-400" /> Starting point
+              <label className="text-[11px] font-mono uppercase tracking-wider text-[#2d6a4f] flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5 text-[#e08713]" /> Starting point
               </label>
               <StartLocationSelector
                 id="roadtrip-start"
@@ -271,8 +317,8 @@ export default function RoadTripPlannerPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                <Compass className="h-3.5 w-3.5 text-amber-400" /> Final destination
+              <label className="text-[11px] font-mono uppercase tracking-wider text-[#2d6a4f] flex items-center gap-1.5">
+                <Compass className="h-3.5 w-3.5 text-[#e08713]" /> Final destination
               </label>
               <StartLocationSelector
                 id="roadtrip-destination"
@@ -285,31 +331,31 @@ export default function RoadTripPlannerPage() {
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5 text-amber-400" /> Departure date (optional)
+              <label className="text-[11px] font-mono uppercase tracking-wider text-[#2d6a4f] flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-[#e08713]" /> Departure date (optional)
               </label>
               <input
                 type="date"
                 value={departureDate}
                 onChange={(e) => setDepartureDate(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none"
+                className="w-full rounded-lg border border-[#d8e6de] bg-white px-3 py-2.5 text-xs text-[#1b2b22] focus:border-[#2d6a4f] focus:outline-none"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5 text-amber-400" /> Departure time
+              <label className="text-[11px] font-mono uppercase tracking-wider text-[#2d6a4f] flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 text-[#e08713]" /> Departure time
               </label>
               <input
                 type="time"
                 value={departureTime}
                 onChange={(e) => setDepartureTime(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none"
+                className="w-full rounded-lg border border-[#d8e6de] bg-white px-3 py-2.5 text-xs text-[#1b2b22] focus:border-[#2d6a4f] focus:outline-none"
               />
             </div>
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider text-slate-400">
+              <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider text-[#2d6a4f]">
                 <span>Days ({days})</span>
-                <span className="text-amber-400/80">{nights} {nights === 1 ? "night" : "nights"}</span>
+                <span className="text-[#e08713] font-semibold">{nights} {nights === 1 ? "night" : "nights"}</span>
               </div>
               <input
                 type="range"
@@ -321,11 +367,11 @@ export default function RoadTripPlannerPage() {
                   setDays(d);
                   setNights(Math.max(0, d - 1));
                 }}
-                className="w-full accent-amber-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
+                className="w-full accent-[#2d6a4f] cursor-pointer h-2 bg-[#e2ece5] rounded-lg"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
+              <label className="text-[11px] font-mono uppercase tracking-wider text-[#2d6a4f]">
                 Travellers ({travellers})
               </label>
               <input
@@ -334,18 +380,18 @@ export default function RoadTripPlannerPage() {
                 max={10}
                 value={travellers}
                 onChange={(e) => setTravellers(Number(e.target.value))}
-                className="w-full accent-amber-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
+                className="w-full accent-[#2d6a4f] cursor-pointer h-2 bg-[#e2ece5] rounded-lg"
               />
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">Traveller Group</label>
+              <label className="text-[11px] font-mono uppercase tracking-wider text-[#2d6a4f]">Traveller Group</label>
               <select
                 value={travellerType}
                 onChange={(e) => setTravellerType(e.target.value as TravellerType)}
-                className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none"
+                className="w-full rounded-lg border border-[#d8e6de] bg-white px-3 py-2.5 text-xs text-[#1b2b22] focus:border-[#2d6a4f] focus:outline-none"
               >
                 <option value="solo">Solo traveller</option>
                 <option value="couple">Couple</option>
@@ -355,11 +401,11 @@ export default function RoadTripPlannerPage() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">Priority Goal</label>
+              <label className="text-[11px] font-mono uppercase tracking-wider text-[#2d6a4f]">Priority Goal</label>
               <select
                 value={tripPriority}
                 onChange={(e) => setTripPriority(e.target.value as TripPriority)}
-                className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none"
+                className="w-full rounded-lg border border-[#d8e6de] bg-white px-3 py-2.5 text-xs text-[#1b2b22] focus:border-[#2d6a4f] focus:outline-none"
               >
                 <option value="balanced">Balanced itinerary</option>
                 <option value="min_cost">Minimum cost (budget focus)</option>
@@ -368,7 +414,7 @@ export default function RoadTripPlannerPage() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">Pace</label>
+              <label className="text-[11px] font-mono uppercase tracking-wider text-[#2d6a4f]">Pace</label>
               <div className="flex gap-1.5">
                 {(["relaxed", "balanced", "packed"] as Pace[]).map((p) => (
                   <button
@@ -377,8 +423,8 @@ export default function RoadTripPlannerPage() {
                     onClick={() => setPace(p)}
                     className={`flex-1 rounded-lg px-2 py-2 text-[11px] font-mono capitalize transition ${
                       pace === p
-                        ? "bg-amber-400 text-slate-950 font-bold"
-                        : "bg-white/5 text-slate-400 hover:text-white"
+                        ? "bg-[#2d6a4f] text-white font-bold shadow-sm"
+                        : "bg-[#f4f7f5] text-[#556b60] hover:text-[#1b2b22] hover:bg-[#e8f1ec]"
                     }`}
                   >
                     {p}
@@ -387,7 +433,7 @@ export default function RoadTripPlannerPage() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">Tier</label>
+              <label className="text-[11px] font-mono uppercase tracking-wider text-[#2d6a4f]">Tier</label>
               <div className="flex gap-1.5">
                 {(["budget", "mid", "luxury"] as BudgetTier[]).map((t) => (
                   <button
@@ -396,8 +442,8 @@ export default function RoadTripPlannerPage() {
                     onClick={() => setBudgetTier(t)}
                     className={`flex-1 rounded-lg px-2 py-2 text-[11px] font-mono capitalize transition ${
                       budgetTier === t
-                        ? "bg-amber-400 text-slate-950 font-bold"
-                        : "bg-white/5 text-slate-400 hover:text-white"
+                        ? "bg-[#2d6a4f] text-white font-bold shadow-sm"
+                        : "bg-[#f4f7f5] text-[#556b60] hover:text-[#1b2b22] hover:bg-[#e8f1ec]"
                     }`}
                   >
                     {t}
@@ -409,11 +455,11 @@ export default function RoadTripPlannerPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">Transport</label>
+              <label className="text-[11px] font-mono uppercase tracking-wider text-[#2d6a4f]">Transport</label>
               <select
                 value={transport}
                 onChange={(e) => setTransport(e.target.value as TransportPreference)}
-                className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none"
+                className="w-full rounded-lg border border-[#d8e6de] bg-white px-3 py-2.5 text-xs text-[#1b2b22] focus:border-[#2d6a4f] focus:outline-none"
               >
                 <option value="self_drive">Self-drive rental</option>
                 <option value="private_car">Own private car</option>
@@ -423,13 +469,13 @@ export default function RoadTripPlannerPage() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
+              <label className="text-[11px] font-mono uppercase tracking-wider text-[#2d6a4f]">
                 Diet
               </label>
               <select
                 value={dietary}
                 onChange={(e) => setDietary(e.target.value as DietaryPreference)}
-                className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none"
+                className="w-full rounded-lg border border-[#d8e6de] bg-white px-3 py-2.5 text-xs text-[#1b2b22] focus:border-[#2d6a4f] focus:outline-none"
               >
                 <option value="no_preference">No preference</option>
                 <option value="vegetarian">Vegetarian</option>
@@ -442,7 +488,7 @@ export default function RoadTripPlannerPage() {
 
           {/* Interests */}
           <div className="space-y-2">
-            <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
+            <label className="text-[11px] font-mono uppercase tracking-wider text-[#2d6a4f]">
               Interests (drives what gets discovered)
             </label>
             <div className="flex flex-wrap gap-1.5">
@@ -453,8 +499,8 @@ export default function RoadTripPlannerPage() {
                   onClick={() => toggleInterest(opt.value)}
                   className={`rounded-lg px-3 py-1.5 text-[11px] font-mono transition ${
                     interests.includes(opt.value)
-                      ? "bg-amber-400 text-slate-950 font-bold"
-                      : "bg-white/5 text-slate-400 hover:text-white"
+                      ? "bg-[#2d6a4f] text-white font-bold shadow-sm"
+                      : "bg-[#f4f7f5] text-[#556b60] hover:text-[#1b2b22] hover:bg-[#e8f1ec]"
                   }`}
                 >
                   {opt.label}
@@ -464,8 +510,8 @@ export default function RoadTripPlannerPage() {
           </div>
 
           {/* Advanced corridor controls */}
-          <details className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-xs text-slate-400">
-            <summary className="cursor-pointer font-mono uppercase tracking-wider text-slate-300">
+          <details className="rounded-xl border border-[#d8e6de] bg-[#f8faf9] p-4 text-xs text-[#556b60]">
+            <summary className="cursor-pointer font-mono uppercase tracking-wider text-[#2d6a4f] font-semibold">
               Corridor &amp; meal settings
             </summary>
             <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -480,7 +526,7 @@ export default function RoadTripPlannerPage() {
                   step={5}
                   value={cornerRadiusKm}
                   onChange={(e) => setCornerRadiusKm(Number(e.target.value))}
-                  className="w-full accent-amber-400"
+                  className="w-full accent-[#2d6a4f]"
                 />
               </div>
               <div className="space-y-1.5">
@@ -494,7 +540,7 @@ export default function RoadTripPlannerPage() {
                   step={5}
                   value={maxDetourKm}
                   onChange={(e) => setMaxDetourKm(Number(e.target.value))}
-                  className="w-full accent-amber-400"
+                  className="w-full accent-[#2d6a4f]"
                 />
               </div>
               <div className="space-y-1.5">
@@ -508,7 +554,7 @@ export default function RoadTripPlannerPage() {
                   value={mealBudgetPerDayInr}
                   onChange={(e) => setMealBudgetPerDayInr(e.target.value ? Number(e.target.value) : "")}
                   placeholder="Auto by tier"
-                  className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none"
+                  className="w-full rounded-lg border border-[#d8e6de] bg-white px-3 py-1.5 text-xs text-[#1b2b22] focus:border-[#2d6a4f] focus:outline-none"
                 />
               </div>
               <label className="flex items-center gap-2 cursor-pointer mt-5">
@@ -516,7 +562,7 @@ export default function RoadTripPlannerPage() {
                   type="checkbox"
                   checked={includeMeals}
                   onChange={(e) => setIncludeMeals(e.target.checked)}
-                  className="h-4 w-4 accent-amber-400"
+                  className="h-4 w-4 accent-[#2d6a4f]"
                 />
                 <span>Find meal stops near the route</span>
               </label>
@@ -525,7 +571,7 @@ export default function RoadTripPlannerPage() {
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
+              <label className="text-[11px] font-mono uppercase tracking-wider text-[#2d6a4f]">
                 Total budget (₹, optional)
               </label>
               <input
@@ -535,14 +581,14 @@ export default function RoadTripPlannerPage() {
                 value={totalBudgetInr || ""}
                 onChange={(e) => setTotalBudgetInr(Number(e.target.value) || 0)}
                 placeholder="e.g. 25000"
-                className="w-32 rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none"
+                className="w-32 rounded-lg border border-[#d8e6de] bg-white px-3 py-2 text-xs text-[#1b2b22] focus:border-[#2d6a4f] focus:outline-none"
               />
             </div>
             <button
               type="button"
               onClick={() => handleDiscover(stage === "selecting" || stage === "planned")}
               disabled={busy}
-              className="flex items-center gap-2 rounded-lg bg-amber-400 px-6 py-3 text-xs font-bold uppercase tracking-wider text-slate-950 transition hover:bg-amber-300 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl bg-[#2d6a4f] hover:bg-[#23533e] px-6 py-3 text-xs font-bold uppercase tracking-wider text-white transition disabled:opacity-50 shadow-md shadow-[#2d6a4f]/20 cursor-pointer"
             >
               {stage === "discovering" ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -554,13 +600,13 @@ export default function RoadTripPlannerPage() {
           </div>
 
           {sameJourney && (stage === "selecting" || stage === "planning" || stage === "planned") && (
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-[#556b60]">
               Showing results for this exact journey. Change the places or days and press discover
               again to refresh.
             </p>
           )}
           {!sameJourney && discovery && (stage === "selecting" || stage === "planned") && (
-            <p className="text-[11px] text-amber-300">
+            <p className="text-[11px] text-[#e08713] font-medium">
               ⚠ You edited the journey — the stops below are stale until you re-run discovery.
             </p>
           )}
@@ -568,12 +614,12 @@ export default function RoadTripPlannerPage() {
 
         {/* Busy state */}
         {stage === "discovering" && (
-          <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-[#0a0f18] p-10 text-center">
-            <Loader2 className="h-8 w-8 animate-spin text-amber-400" />
-            <p className="text-sm text-slate-300">
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-[#d8e6de] bg-white/95 p-10 text-center shadow-sm">
+            <Loader2 className="h-8 w-8 animate-spin text-[#2d6a4f]" />
+            <p className="text-sm text-[#1b2b22]">
               Tracing the real road and scanning the corridor for verifiable stops…
             </p>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-[#556b60]">
               Live routing lookups can take 10–30 seconds on the first request.
             </p>
           </div>
@@ -583,8 +629,8 @@ export default function RoadTripPlannerPage() {
         {discovery && (stage === "selecting" || stage === "planning") && (
           <>
             {stage === "planning" && (
-              <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#0a0f18] p-5 text-sm text-slate-300">
-                <Loader2 className="h-5 w-5 animate-spin text-amber-400" />
+              <div className="flex items-center gap-3 rounded-2xl border border-[#d8e6de] bg-white/95 p-5 text-sm text-[#1b2b22] shadow-sm">
+                <Loader2 className="h-5 w-5 animate-spin text-[#2d6a4f]" />
                 Fitting your picks into a feasible day-by-day schedule…
               </div>
             )}
@@ -611,7 +657,7 @@ export default function RoadTripPlannerPage() {
               <button
                 type="button"
                 onClick={() => setStage("selecting")}
-                className="rounded-lg border border-white/10 px-4 py-2 text-xs text-slate-300 hover:text-white"
+                className="rounded-xl border border-[#d8e6de] bg-white px-4 py-2 text-xs text-[#2d6a4f] hover:bg-[#eef5f1] transition-colors"
               >
                 ← Adjust stops and re-plan
               </button>
@@ -621,7 +667,7 @@ export default function RoadTripPlannerPage() {
 
         {/* Empty state on the form stage */}
         {stage === "form" && !discovery && (
-          <div className="rounded-2xl border border-dashed border-white/15 p-10 text-center text-sm text-slate-400">
+          <div className="rounded-2xl border border-dashed border-[#cbe1d5] bg-white/60 p-10 text-center text-sm text-[#556b60]">
             Choose an origin and destination — for example Bengaluru → Hampi or Belagavi →
             Chikkamagaluru — and we will discover what is genuinely worth stopping for along the
             way.

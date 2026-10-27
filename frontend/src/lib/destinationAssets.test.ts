@@ -12,10 +12,11 @@ describe("destinationAssets", () => {
     expect(getDestinationImage("bengaluru")).toBe("/images/bengaluru.jpg");
   });
 
-  it("handles case insensitivity and region matching", () => {
+  it("handles case insensitivity and neutral landscape fallback", () => {
     expect(getDestinationImage("Hampi-UNESCO")).toBe("/images/hampi.jpg");
-    expect(getDestinationImage("Unknown-Hill", "Malnad & Western Ghats")).toBe("/images/chikkamagaluru.jpg");
-    expect(getDestinationImage("Unknown-Coast", "Coastal Karnataka")).toBe("/images/gokarna.jpg");
+    expect(getDestinationImage("Unknown-Hill", "Malnad & Western Ghats")).toBe("/images/karnataka-neutral-landscape.jpg");
+    expect(getDestinationImage("Belagavi", "North Karnataka")).toBe("/images/karnataka-neutral-landscape.jpg");
+    expect(getDestinationImage("Unknown-Coast", "Coastal Karnataka")).toBe("/images/karnataka-neutral-landscape.jpg");
   });
 
   it("provides recommendation rationales based on region and themes", () => {

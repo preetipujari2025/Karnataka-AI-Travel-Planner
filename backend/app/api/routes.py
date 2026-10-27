@@ -24,6 +24,11 @@ from app.services.roadtrip_planner import PlanError
 router = APIRouter(prefix="/api/routes", tags=["road-trip"])
 
 
+import logging
+
+logger = logging.getLogger("karnataka.routes")
+
+
 @router.post(
     "/discover",
     response_model=RouteDiscoveryResponse,
@@ -32,8 +37,14 @@ router = APIRouter(prefix="/api/routes", tags=["road-trip"])
 def discover_route(request: RouteDiscoveryRequest) -> RouteDiscoveryResponse:
     try:
         return route_discovery.discover_route(request)
-    except DiscoveryError as exc:
+    except (DiscoveryError, ValueError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Unexpected error in route discovery: %s", exc)
+        raise HTTPException(
+            status_code=400,
+            detail=f"We could not discover this route: {str(exc)}",
+        ) from exc
 
 
 @router.post(
@@ -44,5 +55,11 @@ def discover_route(request: RouteDiscoveryRequest) -> RouteDiscoveryResponse:
 def plan_road_trip(request: RoadTripPlanRequest) -> RoadTripPlanResponse:
     try:
         return roadtrip_planner.plan_road_trip(request)
-    except (DiscoveryError, PlanError) as exc:
+    except (DiscoveryError, PlanError, ValueError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Unexpected error in road trip planning: %s", exc)
+        raise HTTPException(
+            status_code=400,
+            detail=f"We could not plan this road trip: {str(exc)}",
+        ) from exc

@@ -35,22 +35,53 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+const DEFAULT_TIMEOUT_MS = 25000;
+
+async function request<T>(path: string, init?: RequestInit, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<T> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  if (init?.signal) {
+    init.signal.addEventListener("abort", () => controller.abort());
+  }
+
   let response: Response;
   try {
     response = await fetch(`${BASE_URL}${path}`, {
       headers: { "Content-Type": "application/json" },
       ...init,
+      signal: controller.signal,
     });
   } catch (error) {
+    clearTimeout(timeoutId);
+    if ((error as Error).name === "AbortError") {
+      throw new ApiError(408, `Request timed out after ${Math.round(timeoutMs / 1000)}s`);
+    }
     throw new ApiError(0, `Cannot reach the API: ${(error as Error).message}`);
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   if (!response.ok) {
     let detail = `${response.status} ${response.statusText}`;
     try {
-      const body = (await response.json()) as { detail?: unknown };
-      if (typeof body.detail === "string") detail = body.detail;
+      const body = (await response.json()) as {
+        detail?: unknown;
+        error?: { code?: string; message?: string; details?: Array<{ field?: string; message?: string }> };
+      };
+      if (body.error?.message) {
+        if (body.error.details && body.error.details.length > 0) {
+          const detailMsgs = body.error.details
+            .map((d) => (d.field ? `${d.field}: ${d.message}` : d.message))
+            .filter(Boolean)
+            .join("; ");
+          detail = detailMsgs ? `${body.error.message} (${detailMsgs})` : body.error.message;
+        } else {
+          detail = body.error.message;
+        }
+      } else if (typeof body.detail === "string") {
+        detail = body.detail;
+      }
     } catch {
       // non-JSON error body; keep status text
     }

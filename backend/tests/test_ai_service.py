@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from typing import Any
 
 import httpx
@@ -528,3 +529,253 @@ def test_exception_messages_do_not_contain_api_key():
     err_text = str(exc_info.value)
     assert secret_key not in err_text
     assert "[REDACTED]" in err_text
+
+
+# ---------------------------------------------------------------------------
+# 15. Mock Bad AI Answers & Verify Smart Planner Fallback
+# ---------------------------------------------------------------------------
+
+
+def test_fallback_on_broken_json(client: TestClient, monkeypatch):
+    """When the AI produces broken or unparseable JSON, fallback planner activates silently with 'Smart planner'."""
+    from app.config import get_settings
+    from app.services import ai_service
+
+    settings = get_settings()
+    monkeypatch.setattr(type(settings), "llm_configured", property(lambda self: True))
+    monkeypatch.setattr(settings, "llm_api_key", "test-key-mock")
+
+    class BrokenJsonProvider(AIProvider):
+        def generate(self, system_prompt: str, user_prompt: str) -> str:
+            return "This is not valid JSON! { broken json: [unclosed"
+
+    monkeypatch.setattr(ai_service, "get_ai_provider", lambda **kwargs: BrokenJsonProvider())
+
+    req = {**SAMPLE_REQUEST_DATA, "planner": "auto"}
+    response = client.post("/api/itineraries/generate", json=req)
+    assert response.status_code == 200, response.text
+    body = response.json()
+
+    assert body["source"] == "fallback"
+    assert body["planner_label"] == "Smart planner"
+    assert len(body["itinerary"]) == req["days"]
+    assert any("fallback" in w for w in body["warnings"])
+
+
+def test_fallback_on_invented_place(client: TestClient, monkeypatch):
+    """When the AI invents destinations outside the 38 curated hubs, it is rejected and falls back."""
+    from app.config import get_settings
+    from app.services import ai_service
+
+    settings = get_settings()
+    monkeypatch.setattr(type(settings), "llm_configured", property(lambda self: True))
+    monkeypatch.setattr(settings, "llm_api_key", "test-key-mock")
+
+    class InventedPlaceProvider(AIProvider):
+        def generate(self, system_prompt: str, user_prompt: str) -> str:
+            return json.dumps({
+                "summary": "Trip with invented fantasy places",
+                "destination_explanations": [],
+                "practical_tips": [],
+                "suggested_substitutions": [],
+                "days": [
+                    {
+                        "day": 1,
+                        "destination_id": "atlantis_underwater",  # Not in 38 curated destinations
+                        "day_title": "Day 1: Exploring Atlantis",
+                        "activities": [
+                            {"time": "09:00", "title": "Visit Ruins", "description": "Underwater tour", "kind": "sightseeing"}
+                        ],
+                    },
+                    {
+                        "day": 2,
+                        "destination_id": "mysuru",
+                        "day_title": "Day 2: Mysuru",
+                        "activities": [
+                            {"time": "09:00", "title": "Palace", "description": "Mysuru palace", "kind": "sightseeing"}
+                        ],
+                    },
+                    {
+                        "day": 3,
+                        "destination_id": "hampi",
+                        "day_title": "Day 3: Hampi",
+                        "activities": [
+                            {"time": "09:00", "title": "Temples", "description": "Hampi ruins", "kind": "sightseeing"}
+                        ],
+                    },
+                    {
+                        "day": 4,
+                        "destination_id": "bengaluru",
+                        "day_title": "Day 4: Bengaluru",
+                        "activities": [
+                            {"time": "09:00", "title": "Lalbagh", "description": "Botanical garden", "kind": "sightseeing"}
+                        ],
+                    },
+                ],
+            })
+
+    monkeypatch.setattr(ai_service, "get_ai_provider", lambda **kwargs: InventedPlaceProvider())
+
+    req = {**SAMPLE_REQUEST_DATA, "days": 4, "planner": "auto"}
+    response = client.post("/api/itineraries/generate", json=req)
+    assert response.status_code == 200, response.text
+    body = response.json()
+
+    assert body["source"] == "fallback"
+    assert body["planner_label"] == "Smart planner"
+    # Ensure no invented place is in the final itinerary
+    curated_ids = {d["id"] for d in client.get("/api/v1/destinations").json()}
+    for day in body["itinerary"]:
+        assert day["place"]["destination_id"] in curated_ids
+        assert day["place"]["destination_id"] != "atlantis_underwater"
+
+
+def test_fallback_on_over_budget(client: TestClient, monkeypatch):
+    """When the AI proposes a budget exceeding the user's maximum budget, it is rejected and falls back."""
+    from app.config import get_settings
+    from app.services import ai_service
+
+    settings = get_settings()
+    monkeypatch.setattr(type(settings), "llm_configured", property(lambda self: True))
+    monkeypatch.setattr(settings, "llm_api_key", "test-key-mock")
+
+    class OverBudgetProvider(AIProvider):
+        def generate(self, system_prompt: str, user_prompt: str) -> str:
+            # Matches day format but returns estimated_cost_inr way above total_budget_inr
+            days_matches = re.findall(r"Day\s+(\d+):\s+destination_id='([^']+)'", user_prompt)
+            days = []
+            for d_num, d_id in days_matches:
+                days.append({
+                    "day": int(d_num),
+                    "destination_id": d_id,
+                    "day_title": f"Day {d_num}",
+                    "activities": [
+                        {"time": "09:00", "title": "Activity", "description": "Desc", "kind": "sightseeing", "cost_inr": 200000}
+                    ],
+                })
+            return json.dumps({
+                "summary": "Extravagant VIP trip",
+                "estimated_cost_inr": 500000,  # 5 Lakhs, far above the 30,000 budget
+                "destination_explanations": [],
+                "practical_tips": [],
+                "suggested_substitutions": [],
+                "days": days,
+            })
+
+    monkeypatch.setattr(ai_service, "get_ai_provider", lambda **kwargs: OverBudgetProvider())
+
+    req = {**SAMPLE_REQUEST_DATA, "total_budget_inr": 30000, "planner": "auto"}
+    response = client.post("/api/itineraries/generate", json=req)
+    assert response.status_code == 200, response.text
+    body = response.json()
+
+    assert body["source"] == "fallback"
+    assert body["planner_label"] == "Smart planner"
+
+
+def test_fallback_on_timeout(client: TestClient, monkeypatch):
+    """When the AI call exceeds the timeout (20s), it falls back silently with 'Smart planner'."""
+    from app.config import get_settings
+    from app.services import ai_service
+
+    settings = get_settings()
+    monkeypatch.setattr(type(settings), "llm_configured", property(lambda self: True))
+    monkeypatch.setattr(settings, "llm_api_key", "test-key-mock")
+
+    class TimeoutProvider(AIProvider):
+        def generate(self, system_prompt: str, user_prompt: str) -> str:
+            raise AITimeoutError("LLM request failed: Read timeout after 20.0s")
+
+    monkeypatch.setattr(ai_service, "get_ai_provider", lambda **kwargs: TimeoutProvider())
+
+    req = {**SAMPLE_REQUEST_DATA, "planner": "auto"}
+    response = client.post("/api/itineraries/generate", json=req)
+    assert response.status_code == 200, response.text
+    body = response.json()
+
+    assert body["source"] == "fallback"
+    assert body["planner_label"] == "Smart planner"
+
+
+def test_ai_personalized_label_on_success(client: TestClient, monkeypatch):
+    """When the AI succeeds, the response includes the 'AI-personalized' label."""
+    from app.config import get_settings
+    from app.services import ai_service
+
+    settings = get_settings()
+    monkeypatch.setattr(type(settings), "llm_configured", property(lambda self: True))
+    monkeypatch.setattr(settings, "llm_api_key", "test-key-mock")
+
+    # MockAIProvider generates a valid, compliant itinerary
+    monkeypatch.setattr(ai_service, "get_ai_provider", lambda **kwargs: MockAIProvider())
+
+    req = {**SAMPLE_REQUEST_DATA, "planner": "auto"}
+    response = client.post("/api/itineraries/generate", json=req)
+    assert response.status_code == 200, response.text
+    body = response.json()
+
+    assert body["source"] == "ai"
+    assert body["planner_label"] == "AI-personalized"
+
+
+def test_ai_retries_once_on_invalid_schema_and_succeeds(client: TestClient, monkeypatch):
+    """When the AI produces invalid schema on attempt 1, it retries once. If attempt 2 is valid, it succeeds."""
+    from app.config import get_settings
+    from app.services import ai_service
+
+    settings = get_settings()
+    monkeypatch.setattr(type(settings), "llm_configured", property(lambda self: True))
+    monkeypatch.setattr(settings, "llm_api_key", "test-key-mock")
+
+    calls = []
+
+    class RetrySuccessProvider(AIProvider):
+        def generate(self, system_prompt: str, user_prompt: str) -> str:
+            calls.append(user_prompt)
+            if len(calls) == 1:
+                # First attempt: invalid schema (empty JSON)
+                return "{}"
+            # Second attempt: valid mock response
+            return MockAIProvider().generate(system_prompt, user_prompt)
+
+    monkeypatch.setattr(ai_service, "get_ai_provider", lambda **kwargs: RetrySuccessProvider())
+
+    req = {**SAMPLE_REQUEST_DATA, "planner": "auto"}
+    response = client.post("/api/itineraries/generate", json=req)
+    assert response.status_code == 200, response.text
+    body = response.json()
+
+    assert len(calls) == 2, "Expected exactly 2 attempts (1 initial + 1 retry)"
+    assert "IMPORTANT CORRECTION (Attempt 2/2)" in calls[1]
+    assert body["source"] == "ai"
+    assert body["planner_label"] == "AI-personalized"
+
+
+def test_ai_retries_once_and_then_falls_back(client: TestClient, monkeypatch):
+    """When the AI produces invalid schema on both attempts, it retries once, then falls back to Smart planner."""
+    from app.config import get_settings
+    from app.services import ai_service
+
+    settings = get_settings()
+    monkeypatch.setattr(type(settings), "llm_configured", property(lambda self: True))
+    monkeypatch.setattr(settings, "llm_api_key", "test-key-mock")
+
+    calls = []
+
+    class AlwaysInvalidProvider(AIProvider):
+        def generate(self, system_prompt: str, user_prompt: str) -> str:
+            calls.append(user_prompt)
+            return "{\"invalid\": true}"
+
+    monkeypatch.setattr(ai_service, "get_ai_provider", lambda **kwargs: AlwaysInvalidProvider())
+
+    req = {**SAMPLE_REQUEST_DATA, "planner": "auto"}
+    response = client.post("/api/itineraries/generate", json=req)
+    assert response.status_code == 200, response.text
+    body = response.json()
+
+    assert len(calls) == 2, "Expected 2 attempts before fallback"
+    assert body["source"] == "fallback"
+    assert body["planner_label"] == "Smart planner"
+
+

@@ -4,15 +4,23 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from pathlib import Path
 from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_backend_dir = Path(__file__).resolve().parent.parent
+_root_dir = _backend_dir.parent
 
 
 class Settings(BaseSettings):
     """Runtime configuration. Every value has a safe local default."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=[
+            str(_backend_dir / ".env"),
+            str(_root_dir / ".env"),
+            ".env",
+        ],
         env_file_encoding="utf-8",
         extra="ignore",
         case_sensitive=False,
@@ -25,25 +33,31 @@ class Settings(BaseSettings):
     # Comma separated origins allowed by CORS
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
-    # AI provider configuration. Supported providers: 'openai' (default), 'gemini', 'mock'.
+    # AI provider configuration. Supported providers: 'gemini' (default), 'openai', 'mock'.
     ai_provider: str = Field(
-        default="openai",
+        default="gemini",
         validation_alias=AliasChoices("ai_provider", "llm_provider"),
     )
     llm_api_key: str = Field(
         default="",
-        validation_alias=AliasChoices("llm_api_key", "ai_api_key"),
+        validation_alias=AliasChoices(
+            "llm_api_key",
+            "ai_api_key",
+            "gemini_api_key",
+            "google_api_key",
+            "google_ai_key",
+        ),
     )
     llm_base_url: str = Field(
-        default="https://api.openai.com/v1",
+        default="",
         validation_alias=AliasChoices("llm_base_url", "ai_base_url"),
     )
     llm_model: str = Field(
-        default="gpt-4o-mini",
+        default="",
         validation_alias=AliasChoices("llm_model", "ai_model"),
     )
     llm_timeout_seconds: float = Field(
-        default=30.0,
+        default=25.0,
         validation_alias=AliasChoices("llm_timeout_seconds", "ai_timeout_seconds"),
     )
 
@@ -80,11 +94,19 @@ class Settings(BaseSettings):
 
     @property
     def ai_base_url(self) -> str:
-        return self.llm_base_url
+        if self.llm_base_url.strip():
+            return self.llm_base_url
+        if self.ai_provider.strip().lower() == "gemini":
+            return "https://generativelanguage.googleapis.com/v1beta/openai"
+        return "https://api.openai.com/v1"
 
     @property
     def ai_model(self) -> str:
-        return self.llm_model
+        if self.llm_model.strip():
+            return self.llm_model
+        if self.ai_provider.strip().lower() == "gemini":
+            return "gemini-2.0-flash"
+        return "gpt-4o-mini"
 
     @property
     def ai_timeout_seconds(self) -> float:

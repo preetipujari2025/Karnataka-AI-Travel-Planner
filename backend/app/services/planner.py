@@ -19,7 +19,11 @@ from app.schemas import (
 )
 from app.services import ai_planner, fallback_planner
 from app.services.budget import compute_budget
-from app.services.recommendation import default_start_month, select_destinations
+from app.services.recommendation import (
+    default_start_month,
+    find_suitable_substitutions,
+    select_destinations,
+)
 from app.services.routing import (
     assign_nights,
     build_legs,
@@ -169,6 +173,89 @@ def _assert_plan_consistency(
         )
 
 
+def generate_why_this_plan(
+    request: PlanRequest,
+    order: list,
+    budget,
+) -> str:
+    """Compose a personalized note highlighting interests, budget, and route fit."""
+    interests_str = ", ".join(i.value.replace("_", " ").title() for i in request.interests)
+    dest_names = " → ".join(d.name for d in order)
+    traveller_str = f"{request.travellers} {'traveller' if request.travellers == 1 else 'travellers'}"
+    budget_target = getattr(request, "total_budget_inr", None)
+
+    if budget_target:
+        budget_note = (
+            f"tailored for your stated budget of INR {budget_target:,} "
+            f"(estimated total cost: INR {budget.total_inr:,} across stay, food, transport, and entry tickets)"
+        )
+    else:
+        budget_note = (
+            f"aligned with the {request.budget_tier.value.title()} tier "
+            f"(estimated total: INR {budget.total_inr:,} for {traveller_str})"
+        )
+
+    pace_str = f"{request.pace.value} pace"
+    if getattr(request, "experience_preference", None):
+        pace_str += f", {request.experience_preference.value.replace('_', ' ')} style"
+
+    return (
+        f"Why this plan for you: Crafted specifically for your interest in {interests_str} over {request.days} "
+        f"{'day' if request.days == 1 else 'days'}, this journey links {dest_names}. "
+        f"The itinerary is designed for {traveller_str} at a {pace_str}, and is {budget_note}. "
+        f"Nearby sights are grouped on the same day to eliminate exhausting cross-state transit, verified entrance "
+        f"fees are itemized, and authentic regional Karnataka dining highlights are included throughout."
+    )
+
+
+def check_duration_interest_advice(request: PlanRequest) -> str | None:
+    """Polite advice when available days are insufficient for the chosen interests."""
+    interests = [i.value for i in request.interests]
+    days = request.days
+
+    # 1-day trip with 3+ interests
+    if days == 1 and len(interests) >= 3:
+        kept = [interests[0].replace("_", " ").title()]
+        dropped = [i.replace("_", " ").title() for i in interests[1:]]
+        return (
+            f"With only 1 day available, attempting to cover {len(interests)} diverse interests "
+            f"({', '.join(i.replace('_', ' ').title() for i in interests)}) across Karnataka will leave you rushed. "
+            f"We politely recommend focusing on {kept[0]} for this single day, and dropping {', '.join(dropped)} "
+            f"for a future multi-day getaway."
+        )
+
+    # 1-day trip combining distant cross-state regional themes (e.g. beaches + hills/heritage)
+    if days == 1 and any(b in interests for b in ("beach", "beaches")) and any(h in interests for h in ("hills", "coffee_hills", "heritage")):
+        return (
+            "With only 1 day available, combining coastal beaches with inland hill stations or royal heritage sites "
+            "is not feasible due to 6+ hours of transit across the Western Ghats. We politely suggest focusing on one region "
+            "and dropping the other for this trip."
+        )
+
+    # 2-3 day trips with 4+ diverse interests
+    if days <= 3 and len(interests) >= 4:
+        kept = [i.replace("_", " ").title() for i in interests[:2]]
+        dropped = [i.replace("_", " ").title() for i in interests[2:]]
+        return (
+            f"With {days} days available, experiencing {len(interests)} diverse interests "
+            f"({', '.join(i.replace('_', ' ').title() for i in interests)}) requires excessive highway transit. "
+            f"We politely suggest focusing on {', '.join(kept)}, and saving {', '.join(dropped)} "
+            f"for a dedicated 5+ day trip."
+        )
+
+    # 4-5 day trips with 6+ interests
+    if days <= 5 and len(interests) >= 6:
+        kept = [i.replace("_", " ").title() for i in interests[:3]]
+        dropped = [i.replace("_", " ").title() for i in interests[3:]]
+        return (
+            f"With {days} days available, balancing {len(interests)} disparate interests spreads your schedule thin. "
+            f"To allow meaningful exploration rather than rushed transit, we suggest prioritizing {', '.join(kept)} "
+            f"and dropping {', '.join(dropped)}."
+        )
+
+    return None
+
+
 def create_plan(request: PlanRequest) -> PlanResponse:
     """Build a full plan. Raises PlanValidationError / ai_planner.AIGenerationError."""
     start = get_destination(request.start_city)
@@ -214,6 +301,16 @@ def create_plan(request: PlanRequest) -> PlanResponse:
         # origin -> destination route instead of letting nearest-neighbour put
         # the final destination mid-tour.
         order = [d for d in order if d.id != final.id] + [final]
+
+    if len(order) > request.days:
+        if final is not None and order[-1].id == final.id:
+            intermediates = order[1:-1]
+            order = [order[0]] + intermediates[: max(0, request.days - 2)] + [final]
+            if len(order) > request.days:
+                order = [final]
+        else:
+            order = order[: request.days]
+
     # No destination may be selected twice — a repeat in the order is a bug.
     if len({d.id for d in order}) != len(order):
         raise PlanValidationError(
@@ -242,6 +339,7 @@ def create_plan(request: PlanRequest) -> PlanResponse:
 
     # 3. Planner selection (AI first, deterministic fallback always available)
     source = "fallback"
+    planner_label = "Smart planner"
     summary: str | None = None
     itinerary = None
     dest_explanations: list[DestinationSuitability] = []
@@ -266,19 +364,23 @@ def create_plan(request: PlanRequest) -> PlanResponse:
                 suggested_substitutions = ai_res.suggested_substitutions
                 ai_provider_name = ai_res.ai_provider
                 source = "ai"
+                planner_label = "AI-personalized"
             except ai_planner.AIGenerationError as exc:
                 if request.planner == "ai":
                     raise
-                logger.warning("AI planner failed, using fallback: %s", exc)
+                logger.warning("AI planner failed, falling back silently to Smart planner: %s", exc)
                 warnings.append(
                     f"AI planner failed ({exc}); used the deterministic fallback planner."
                 )
+                source = "fallback"
+                planner_label = "Smart planner"
 
     if itinerary is None:
         summary, itinerary = fallback_planner.build_fallback_itinerary(
             request, nightly_plan, legs, order
         )
         source = "fallback"
+        planner_label = "Smart planner"
         # Deterministic explanations and regional recommendations
         dest_explanations = [
             DestinationSuitability(
@@ -294,16 +396,16 @@ def create_plan(request: PlanRequest) -> PlanResponse:
             "Pre-book verified state transport or local registered guides for heritage circuits.",
         ]
         order_ids = {d.id for d in order}
-        alts = [d for d in all_destinations() if d.id not in order_ids and d.has_usable_coords][:2]
+        subs = find_suitable_substitutions(order[-1], request, order_ids, max_km=160.0, limit=2)
         suggested_substitutions = [
             SuggestedSubstitution(
                 current_destination_id=order[-1].id,
                 current_destination_name=order[-1].name,
                 suggested_destination_id=alt.id,
                 suggested_destination_name=alt.name,
-                reason=f"Approved alternative in {alt.region} known for {', '.join(alt.highlights[:2])}.",
+                reason=reason,
             )
-            for alt in alts
+            for alt, reason in subs
         ]
 
     # 3b. Consistency guard: selected IDs, itinerary stops and route legs must
@@ -335,7 +437,22 @@ def create_plan(request: PlanRequest) -> PlanResponse:
         travellers=request.travellers,
         entry_fee_destinations=unique_stops,
         transport=request.transport_preference,
+        total_budget_inr=getattr(request, "total_budget_inr", None),
     )
+
+    if getattr(request, "total_budget_inr", None) is not None:
+        if breakdown.total_inr > request.total_budget_inr:
+            over = breakdown.total_inr - request.total_budget_inr
+            warnings.append(
+                f"Budget Warning: Estimated minimum trip cost of INR {breakdown.total_inr:,} "
+                f"exceeds your total budget INR {request.total_budget_inr} by INR {over:,}. "
+                "Consider shortening your trip, switching to the Budget Explorer tier, or using public transport."
+            )
+
+    why_this_plan_note = generate_why_this_plan(request, order, breakdown)
+    duration_advice = check_duration_interest_advice(request)
+    if duration_advice:
+        warnings.append(f"Pacing Advice: {duration_advice}")
 
     logger.info(
         "plan generated source=%s days=%s stops=%s transport=%s total_inr=%s",
@@ -349,6 +466,7 @@ def create_plan(request: PlanRequest) -> PlanResponse:
     return PlanResponse(
         plan_id=uuid.uuid4().hex[:12],
         source=source,
+        planner_label=planner_label,
         summary=summary or "",
         interests=list(request.interests),
         itinerary=itinerary,
@@ -361,4 +479,6 @@ def create_plan(request: PlanRequest) -> PlanResponse:
         practical_tips=practical_tips,
         suggested_substitutions=suggested_substitutions,
         ai_provider=ai_provider_name if source == "ai" else None,
+        why_this_plan=why_this_plan_note,
+        duration_interest_advice=duration_advice,
     )

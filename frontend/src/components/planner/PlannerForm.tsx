@@ -25,6 +25,7 @@ import {
   Mountain,
   ShoppingBag,
   Palette,
+  AlertCircle,
 } from "lucide-react";
 import type { Interest, PlanRequest, BudgetTier, Pace, PlannerMode } from "../../api/types";
 import type { MetaResponse } from "../../api/types";
@@ -39,6 +40,8 @@ export const DEFAULT_REQUEST: PlanRequest = {
   start_city: "bengaluru",
   start_month: 12,
   planner: "auto",
+  total_budget_inr: 45000,
+  experience_preference: "cultural",
 };
 
 const MONTHS = [
@@ -60,8 +63,10 @@ const INTEREST_ICONS: Record<Interest, React.ComponentType<{ className?: string 
   heritage: Landmark,
   nature: Trees,
   beach: Waves,
+  beaches: Waves,
   adventure: Compass,
   spirituality: Sparkles,
+  spiritual: Sparkles,
   wildlife: Bird,
   food: UtensilsCrossed,
   urban: Building2,
@@ -71,6 +76,9 @@ const INTEREST_ICONS: Record<Interest, React.ComponentType<{ className?: string 
   viewpoints: Mountain,
   shopping: ShoppingBag,
   culture: Palette,
+  coffee_hills: Coffee,
+  hills: Mountain,
+  coffee: Coffee,
 };
 
 interface Props {
@@ -100,11 +108,12 @@ export default function PlannerForm({ meta, value, onChange, onSubmit, planning 
   const interestList = meta?.interests ?? [
     { value: "heritage", label: "Heritage", description: "Forts, temples, ruins and museums" },
     { value: "nature", label: "Nature", description: "Hills, waterfalls, forests and trails" },
-    { value: "beach", label: "Beach", description: "Coast, islands and seaside towns" },
-    { value: "adventure", label: "Adventure", description: "Rafting, trekking and jungle activities" },
-    { value: "spirituality", label: "Spirituality", description: "Temples, mathas and pilgrim towns" },
-    { value: "wildlife", label: "Wildlife", description: "Safaris and birding" },
+    { value: "coffee_hills", label: "Coffee & Hills", description: "Coffee estates, misty ridges and Western Ghats" },
+    { value: "wildlife", label: "Wildlife", description: "Tiger reserves, safaris and birding" },
+    { value: "beach", label: "Beaches", description: "Coast, islands and seaside cliffs" },
+    { value: "spirituality", label: "Spiritual", description: "Temples, mathas and pilgrim towns" },
     { value: "food", label: "Food", description: "Regional cuisine and café culture" },
+    { value: "adventure", label: "Adventure", description: "Rafting, trekking and jungle activities" },
     { value: "urban", label: "Urban", description: "City life, markets and nightlife" },
     { value: "photography", label: "Photography", description: "Scenic and photogenic spots" },
   ];
@@ -257,18 +266,91 @@ export default function PlannerForm({ meta, value, onChange, onSubmit, planning 
         </div>
       </div>
 
-      {/* 3. Budget Tier */}
-      <div className="flex flex-col gap-3">
-        <label className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-          <Wallet className="h-3.5 w-3.5 text-amber-400" />
-          Budget Class & Comfort
-        </label>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* 3. Budget & Comfort Class */}
+      <div className="flex flex-col gap-4 rounded-2xl glass-panel p-5 border-white/5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+            <Wallet className="h-3.5 w-3.5 text-amber-400" />
+            3. Total Budget (INR) & Comfort Tier
+          </label>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-amber-400 font-mono text-xs">₹</span>
+              <input
+                id="homepage-budget-inr-input"
+                type="number"
+                min={1000}
+                max={10000000}
+                step={1000}
+                value={value.total_budget_inr || 45000}
+                onChange={(e) => onChange({ ...value, total_budget_inr: Math.max(0, Number(e.target.value)) })}
+                className="w-32 rounded-lg border border-white/10 bg-slate-900/80 pl-6 pr-2 py-1 text-xs font-bold font-mono text-amber-300 focus:border-amber-400 focus:outline-none"
+              />
+            </div>
+            <span className="font-serif text-base font-bold text-amber-300 hidden sm:inline">
+              ₹{(value.total_budget_inr || 45000).toLocaleString("en-IN")} INR
+            </span>
+          </div>
+        </div>
+
+        <input
+          type="range"
+          min={1000}
+          max={250000}
+          step={1000}
+          value={value.total_budget_inr || 45000}
+          onChange={(e) => onChange({ ...value, total_budget_inr: Number(e.target.value) })}
+          className="w-full accent-amber-400 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
+        />
+
+        {/* Quick Budget Chips */}
+        <div className="flex flex-wrap gap-1.5">
+          {[10000, 25000, 45000, 80000, 150000].map((amt) => (
+            <button
+              key={amt}
+              type="button"
+              onClick={() => onChange({ ...value, total_budget_inr: amt })}
+              className={`rounded-md px-2 py-0.5 text-[10px] font-mono transition ${
+                value.total_budget_inr === amt
+                  ? "bg-amber-400 text-slate-950 font-bold"
+                  : "bg-white/5 text-slate-400 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              ₹{amt.toLocaleString("en-IN")}
+            </button>
+          ))}
+        </div>
+
+        {/* Clear warning message if budget is too low */}
+        {(() => {
+          const minDaily = value.budget_tier === "luxury" ? 7000 : value.budget_tier === "mid" ? 2500 : 1200;
+          const minRecommended = (value.days || 1) * (value.travellers || 1) * minDaily;
+          const tooLow = (value.total_budget_inr || 45000) < minRecommended;
+          if (!tooLow) return null;
+          return (
+            <div
+              id="form-budget-too-low-notice"
+              className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-300 flex items-start gap-2 animate-in fade-in"
+            >
+              <AlertCircle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold text-amber-200 block">
+                  Budget Warning: ₹{(value.total_budget_inr || 45000).toLocaleString("en-IN")} is low for this journey
+                </span>
+                <span className="text-slate-300 text-[11px] block mt-0.5 leading-relaxed">
+                  A {value.days}-day trip for {value.travellers} {value.travellers === 1 ? "traveller" : "travellers"} in {value.budget_tier} class typically requires at least ₹{minRecommended.toLocaleString("en-IN")}. The planner will optimize for economy and alert if expenses exceed your target.
+                </span>
+              </div>
+            </div>
+          );
+        })()}
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
           {[
             {
               tier: "budget" as BudgetTier,
               label: "Budget Explorer",
-              desc: "Homestays, hostels & public transport",
+              desc: "Homestays, hostels & public transit",
               icon: Wallet,
             },
             {
@@ -280,7 +362,7 @@ export default function PlannerForm({ meta, value, onChange, onSubmit, planning 
             {
               tier: "luxury" as BudgetTier,
               label: "Royal Luxury",
-              desc: "Heritage resorts & private chauffeur",
+              desc: "Heritage resorts & luxury lodges",
               icon: Crown,
             },
           ].map((item) => {
@@ -302,6 +384,63 @@ export default function PlannerForm({ meta, value, onChange, onSubmit, planning 
                   <span className="text-xs font-bold text-white">{item.label}</span>
                 </div>
                 <span className="text-[11px] text-slate-400 leading-tight">{item.desc}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 4. Preferred Type of Experience */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+            <Compass className="h-3.5 w-3.5 text-amber-400" />
+            4. Preferred Type of Experience
+          </label>
+          <span className="text-[11px] text-slate-400 capitalize">
+            {value.experience_preference || "cultural"} style
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          {[
+            { id: "relaxed", label: "Relaxed", desc: "Scenic leisure & slow mornings", icon: Coffee },
+            { id: "adventure", label: "Adventure", desc: "Trekking, rafting & jungle thrills", icon: Compass },
+            { id: "cultural", label: "Cultural", desc: "Heritage ruins & temple dynasties", icon: Landmark },
+            { id: "family", label: "Family", desc: "Parks, safe pacing & wildlife", icon: Users },
+            { id: "solo", label: "Solo", desc: "Backpacker hubs & cafes", icon: MapPin },
+            { id: "couple", label: "Couple", desc: "Misty ridges & sunset coves", icon: Sparkles },
+            { id: "luxury", label: "Luxury", desc: "Royal heritage & 5-star lodges", icon: Crown },
+            { id: "budget_backpacking", label: "Backpacking", desc: "Homestays, hostels & buses", icon: Wallet },
+          ].map((exp) => {
+            const active = value.experience_preference === exp.id;
+            const Icon = exp.icon;
+            return (
+              <button
+                key={exp.id}
+                type="button"
+                onClick={() => {
+                  const updates: Partial<PlanRequest> = {
+                    experience_preference: exp.id as any,
+                  };
+                  if (exp.id === "luxury") updates.budget_tier = "luxury";
+                  if (exp.id === "budget_backpacking") updates.budget_tier = "budget";
+                  if (exp.id === "relaxed") updates.pace = "relaxed";
+                  if (exp.id === "family") updates.travellers = Math.max(value.travellers, 3);
+                  if (exp.id === "solo") updates.travellers = 1;
+                  if (exp.id === "couple") updates.travellers = 2;
+                  onChange({ ...value, ...updates });
+                }}
+                className={`flex flex-col text-left p-3 rounded-xl border transition-all ${
+                  active
+                    ? "border-amber-400 bg-amber-400/20 text-white shadow-md shadow-amber-400/10"
+                    : "border-white/5 bg-white/5 text-slate-400 hover:border-white/20 hover:text-slate-200"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <Icon className={`h-4 w-4 ${active ? "text-amber-400" : "text-slate-400"}`} />
+                  <span className="text-xs font-bold text-white">{exp.label}</span>
+                </div>
+                <span className="text-[10px] text-slate-400 leading-tight">{exp.desc}</span>
               </button>
             );
           })}

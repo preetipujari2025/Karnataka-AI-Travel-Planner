@@ -49,11 +49,14 @@ import ItineraryView from "../components/ItineraryView";
 import StartLocationSelector from "../components/planner/StartLocationSelector";
 
 type ExperiencePreference =
-  | "relaxed_escape"
-  | "cultural_exploration"
-  | "adventure_outdoors"
-  | "family_trip"
-  | "mixed_experience";
+  | "relaxed"
+  | "adventure"
+  | "cultural"
+  | "family"
+  | "solo"
+  | "couple"
+  | "luxury"
+  | "budget_backpacking";
 
 const EXPERIENCE_OPTIONS: Array<{
   id: ExperiencePreference;
@@ -63,39 +66,60 @@ const EXPERIENCE_OPTIONS: Array<{
   experienceTypes: ExperienceType[];
 }> = [
   {
-    id: "relaxed_escape",
+    id: "relaxed",
     title: "Relaxed Escape",
     desc: "Unhurried mornings, scenic stays, and uncrowded nature trails.",
     icon: Coffee,
     experienceTypes: ["nature_walk", "sightseeing"],
   },
   {
-    id: "cultural_exploration",
-    title: "Cultural Exploration",
-    desc: "Ancient architecture, royal dynasties, temple mathas, and local arts.",
-    icon: Landmark,
-    experienceTypes: ["heritage_tour", "pilgrimage"],
-  },
-  {
-    id: "adventure_outdoors",
+    id: "adventure",
     title: "Adventure & Outdoors",
     desc: "Western Ghats trekking, river rafting, and wildlife safaris.",
     icon: Compass,
     experienceTypes: ["trekking", "wildlife_safari", "boating"],
   },
   {
-    id: "family_trip",
+    id: "cultural",
+    title: "Cultural Exploration",
+    desc: "Ancient architecture, royal dynasties, temple mathas, and local arts.",
+    icon: Landmark,
+    experienceTypes: ["heritage_tour", "pilgrimage"],
+  },
+  {
+    id: "family",
     title: "Family Trip",
     desc: "Comfortable pacing, gentle sights, safe transport, and varied activities.",
     icon: Users,
     experienceTypes: ["sightseeing", "nature_walk"],
   },
   {
-    id: "mixed_experience",
-    title: "Mixed Experience",
-    desc: "A balanced blend of nature, heritage ruins, coastal stops, and local dining.",
+    id: "solo",
+    title: "Solo Discovery",
+    desc: "Walkable backpacker hubs, cafes, culture, and flexible exploration.",
+    icon: MapPin,
+    experienceTypes: ["sightseeing", "food_tour", "nature_walk"],
+  },
+  {
+    id: "couple",
+    title: "Romantic Couple",
+    desc: "Misty coffee estates, sunset coves, and serene riverside sanctuaries.",
     icon: Sparkles,
-    experienceTypes: ["sightseeing", "heritage_tour", "nature_walk"],
+    experienceTypes: ["sightseeing", "nature_walk", "boating"],
+  },
+  {
+    id: "luxury",
+    title: "Royal Luxury",
+    desc: "Heritage palace resorts, 5-star lodges, and private chauffeured travel.",
+    icon: Flame,
+    experienceTypes: ["sightseeing", "heritage_tour", "wildlife_safari"],
+  },
+  {
+    id: "budget_backpacking",
+    title: "Budget Backpacking",
+    desc: "Homestays, hostels, minimal sight fees, and public transport routes.",
+    icon: Wallet,
+    experienceTypes: ["sightseeing", "nature_walk", "trekking"],
   },
 ];
 
@@ -107,6 +131,7 @@ const INTEREST_OPTIONS: Array<{
 }> = [
   { id: "heritage", label: "Heritage", icon: Landmark, backendValue: "heritage" },
   { id: "nature", label: "Nature", icon: Trees, backendValue: "nature" },
+  { id: "coffee_hills", label: "Coffee & Hills", icon: Coffee, backendValue: "coffee_hills" },
   { id: "beach", label: "Beaches", icon: Waves, backendValue: "beach" },
   { id: "food", label: "Food", icon: UtensilsCrossed, backendValue: "food" },
   { id: "wildlife", label: "Wildlife", icon: Bird, backendValue: "wildlife" },
@@ -184,7 +209,7 @@ export default function TripPlannerPage() {
   const [interests, setInterests] = useState<Interest[]>(
     initialParams.interests || ["heritage", "nature"]
   );
-  const [experiencePref, setExperiencePref] = useState<ExperiencePreference>("mixed_experience");
+  const [experiencePref, setExperiencePref] = useState<ExperiencePreference>("cultural");
   const [pace, setPace] = useState<Pace>(initialParams.pace || "balanced");
   const [budgetTier, setBudgetTier] = useState<BudgetTier>(initialParams.budget_tier || "mid");
   const [totalBudgetInr, setTotalBudgetInr] = useState<number>(50000);
@@ -268,6 +293,7 @@ export default function TripPlannerPage() {
       budget_tier: budgetTier,
       pace,
       interests,
+      experience_preference: experiencePref,
       planner: plannerMode,
       total_budget_inr: totalBudgetInr > 0 ? totalBudgetInr : null,
       transport_preference: transportPref,
@@ -291,24 +317,37 @@ export default function TripPlannerPage() {
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
-      setErrorMessage((err as Error).message || "Unable to generate plan. Please try again.");
+      // Silently fall back to deterministic Smart planner so user never sees an error
+      try {
+        setLoadingStage("Finalizing verified itinerary with Smart planner...");
+        const fallbackPayload: TripRequest = { ...tripPayload, planner: "fallback" };
+        const fallbackResponse = await generateItinerary(fallbackPayload);
+        setLastTripRequest(fallbackPayload);
+        setGeneratedPlan(fallbackResponse);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } catch (fallbackErr) {
+        setErrorMessage((fallbackErr as Error).message || "Unable to generate plan. Please try again.");
+      }
     } finally {
       setIsGenerating(false);
     }
   }
 
-  // Calculated per-person and per-day values for clear UI display
+  // Calculated per-person, per-day, and minimum viable values for clear UI display
   const perPersonTotal = Math.round(totalBudgetInr / (travellers || 1));
   const perPersonPerDay = Math.round(perPersonTotal / (days || 1));
+  const minDailyPerPerson = budgetTier === "luxury" ? 7000 : budgetTier === "mid" ? 2500 : 1200;
+  const minRecommendedBudget = (days || 1) * (travellers || 1) * minDailyPerPerson;
+  const isBudgetTooLow = totalBudgetInr < minRecommendedBudget;
 
   return (
-    <div className="min-h-screen bg-[#070b12] text-slate-100 flex flex-col justify-between selection:bg-amber-500/30 selection:text-amber-200">
+    <div className="min-h-screen bg-[#fcfbf9] text-[#1b2b22] flex flex-col justify-between selection:bg-[#2d6a4f]/20 selection:text-[#1b2b22]">
       {/* Top Guided Navigation Bar */}
-      <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#070b12]/92 px-6 py-4 backdrop-blur-md">
+      <nav className="sticky top-0 z-50 border-b border-[#e2ece5] bg-[#fcfbf9]/95 px-6 py-4 backdrop-blur-md shadow-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <Link
             to="/"
-            className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-slate-300 hover:text-amber-400 transition-colors"
+            className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#2d6a4f] hover:text-[#1b2b22] transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Karnataka Trails AI</span>
@@ -331,19 +370,19 @@ export default function TripPlannerPage() {
                   }}
                   className={`flex items-center gap-2 text-xs font-mono uppercase tracking-wider transition-colors ${
                     currentStep === step.num
-                      ? "text-amber-400 font-bold"
+                      ? "text-[#2d6a4f] font-bold"
                       : currentStep > step.num
-                      ? "text-slate-300 hover:text-white"
-                      : "text-slate-600 cursor-not-allowed"
+                      ? "text-[#476052] hover:text-[#1b2b22]"
+                      : "text-[#94a39b] cursor-not-allowed"
                   }`}
                 >
                   <span
                     className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
                       currentStep === step.num
-                        ? "bg-amber-400 text-slate-950"
+                        ? "bg-[#2d6a4f] text-white"
                         : currentStep > step.num
-                        ? "bg-white/10 text-white"
-                        : "border border-white/10 text-slate-600"
+                        ? "bg-[#e8f1ec] text-[#2d6a4f]"
+                        : "border border-[#d8e6de] text-[#94a39b]"
                     }`}
                   >
                     {step.num}
@@ -358,15 +397,15 @@ export default function TripPlannerPage() {
           <div className="flex items-center gap-4">
             <Link
               to="/road-trip"
-              className="hidden sm:flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-300 transition hover:border-amber-400/40 hover:text-amber-400"
+              className="hidden sm:flex items-center gap-1.5 rounded-lg border border-[#d8e6de] bg-white px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider text-[#2d6a4f] transition hover:border-[#2d6a4f]/40 hover:bg-[#eef5f1]"
             >
               <Route className="h-3.5 w-3.5" />
               Road Trip
             </Link>
-            <div className="flex items-center gap-2 text-[11px] font-mono text-slate-400">
+            <div className="flex items-center gap-2 text-[11px] font-mono text-[#556b60]">
               <span
                 className={`h-2 w-2 rounded-full ${
-                  health?.status === "ok" ? "bg-emerald-400 shadow-sm shadow-emerald-400" : "bg-amber-400"
+                  health?.status === "ok" ? "bg-[#2d6a4f] shadow-sm shadow-[#2d6a4f]/40" : "bg-[#e08713]"
                 }`}
               />
               <span className="hidden md:inline">
@@ -392,17 +431,17 @@ export default function TripPlannerPage() {
         ) : isGenerating ? (
           /* Loading State */
           <div className="min-h-[50vh] flex flex-col items-center justify-center text-center p-8">
-            <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-amber-400/10 border border-amber-400/30 mb-8">
-              <Loader2 className="h-10 w-10 text-amber-400 animate-spin" />
+            <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-[#2d6a4f]/10 border border-[#2d6a4f]/25 mb-8">
+              <Loader2 className="h-10 w-10 text-[#2d6a4f] animate-spin" />
             </div>
 
-            <h2 className="font-serif text-2xl sm:text-3xl font-normal text-white">
+            <h2 className="font-serif text-2xl sm:text-3xl font-normal text-[#1b2b22]">
               Synthesizing Your Journey
             </h2>
-            <p className="mt-3 font-mono text-xs uppercase tracking-wider text-amber-400 animate-pulse">
+            <p className="mt-3 font-mono text-xs uppercase tracking-wider text-[#2d6a4f] animate-pulse">
               {loadingStage}
             </p>
-            <p className="mt-4 text-xs text-slate-400 max-w-md font-light">
+            <p className="mt-4 text-xs text-[#556b60] max-w-md font-light leading-relaxed">
               Connecting road networks across verified Karnataka destinations and 31 districts, verifying
               seasonal suitability, and validating itemized costs.
             </p>
@@ -412,8 +451,8 @@ export default function TripPlannerPage() {
           <div className="space-y-10 animate-in fade-in duration-300">
             {/* Error Notice */}
             {errorMessage && (
-              <div className="rounded-xl border border-red-500/30 bg-red-950/40 p-4 text-xs text-red-200 flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
+              <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-800 flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
                 <div>
                   <strong className="block font-medium">Generation Error</strong>
                   <span>{errorMessage}</span>
@@ -425,21 +464,21 @@ export default function TripPlannerPage() {
             {currentStep === 1 && (
               <div className="space-y-8">
                 <div>
-                  <span className="text-xs uppercase font-mono tracking-widest text-amber-400 block mb-1">
+                  <span className="text-xs uppercase font-mono tracking-widest text-[#2d6a4f] block mb-1">
                     Step 01 of 04 • Foundation
                   </span>
-                  <h1 className="font-serif text-3xl sm:text-4xl font-normal text-white">
+                  <h1 className="font-serif text-3xl sm:text-4xl font-normal text-[#1b2b22]">
                     Where will your journey begin?
                   </h1>
-                  <p className="mt-2 text-sm text-slate-300 font-light">
+                  <p className="mt-2 text-sm text-[#556b60] font-light">
                     Select your departure hub and trip duration.
                   </p>
                 </div>
 
                 {/* Starting Hub City */}
                 <div className="space-y-3">
-                  <label className="text-xs font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-amber-400" />
+                  <label className="text-xs font-mono uppercase tracking-wider text-[#2d6a4f] flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-[#e08713]" />
                     Starting Hub / District Headquarters
                   </label>
                   <StartLocationSelector
@@ -453,8 +492,8 @@ export default function TripPlannerPage() {
                 {/* Final Destination (optional) + Departure Time */}
                 <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4 items-end">
                   <div className="space-y-3">
-                    <label className="text-xs font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                      <Flag className="h-4 w-4 text-amber-400" />
+                    <label className="text-xs font-mono uppercase tracking-wider text-[#2d6a4f] flex items-center gap-2">
+                      <Flag className="h-4 w-4 text-[#e08713]" />
                       Final Destination (Optional)
                     </label>
                     <StartLocationSelector
@@ -463,14 +502,14 @@ export default function TripPlannerPage() {
                       onChange={setFinalDestination}
                       cities={meta?.start_cities ?? []}
                     />
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-[11px] text-[#556b60]">
                       Ending somewhere specific? The planner will anchor the route there. Leave
                       unset to let the planner pick the loop.
                     </p>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-amber-400" />
+                    <label className="text-xs font-mono uppercase tracking-wider text-[#2d6a4f] flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-[#e08713]" />
                       Departure Time
                     </label>
                     <input
@@ -478,19 +517,19 @@ export default function TripPlannerPage() {
                       type="time"
                       value={departureTime}
                       onChange={(e) => setDepartureTime(e.target.value)}
-                      className="w-full sm:w-36 rounded-xl border border-white/10 bg-[#0a0f18] px-3.5 py-3 text-sm text-white focus:border-amber-400 focus:outline-none"
+                      className="w-full sm:w-36 rounded-xl border border-[#d8e6de] bg-white px-3.5 py-3 text-sm text-[#1b2b22] focus:border-[#2d6a4f] focus:outline-none shadow-sm"
                     />
                   </div>
                 </div>
 
                 {/* Duration in Days */}
-                <div className="space-y-4 rounded-xl border border-white/10 bg-[#0a0f18] p-6">
+                <div className="space-y-4 rounded-2xl border border-[#d8e6de] bg-white/95 p-6 shadow-sm">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-amber-400" />
+                    <label className="text-xs font-mono uppercase tracking-wider text-[#2d6a4f] flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-[#e08713]" />
                       Trip Duration
                     </label>
-                    <span className="font-serif text-2xl font-bold text-amber-300">
+                    <span className="font-serif text-2xl font-bold text-[#2d6a4f]">
                       {days} {days === 1 ? "Day" : "Days"}
                     </span>
                   </div>
@@ -501,7 +540,7 @@ export default function TripPlannerPage() {
                     max={21}
                     value={days}
                     onChange={(e) => setDays(Number(e.target.value))}
-                    className="w-full accent-amber-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
+                    className="w-full accent-[#2d6a4f] cursor-pointer h-2 bg-[#e2ece5] rounded-lg"
                   />
 
                   {/* Duration Presets */}
@@ -519,8 +558,8 @@ export default function TripPlannerPage() {
                         onClick={() => setDays(preset.d)}
                         className={`rounded-lg px-3 py-1.5 text-xs font-mono transition ${
                           days === preset.d
-                            ? "bg-amber-400 text-slate-950 font-bold"
-                            : "bg-white/5 text-slate-400 hover:text-white"
+                            ? "bg-[#2d6a4f] text-white font-bold shadow-sm"
+                            : "bg-[#f4f7f5] text-[#556b60] hover:text-[#1b2b22] hover:bg-[#e8f1ec]"
                         }`}
                       >
                         {preset.label}
@@ -530,21 +569,21 @@ export default function TripPlannerPage() {
                 </div>
 
                 {/* Specific Travel Dates (Optional) */}
-                <div className="rounded-xl border border-white/10 bg-[#0a0f18] p-6 space-y-4">
+                <div className="rounded-2xl border border-[#d8e6de] bg-white/95 p-6 space-y-4 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-amber-400" />
-                      <span className="text-xs font-mono uppercase tracking-wider text-slate-300">
+                      <Calendar className="h-4 w-4 text-[#e08713]" />
+                      <span className="text-xs font-mono uppercase tracking-wider text-[#2d6a4f]">
                         Concrete Travel Dates (Optional)
                       </span>
                     </div>
 
-                    <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-400">
+                    <label className="flex items-center gap-2 cursor-pointer text-xs text-[#556b60]">
                       <input
                         type="checkbox"
                         checked={useConcreteDates}
                         onChange={(e) => setUseConcreteDates(e.target.checked)}
-                        className="rounded border-white/20 accent-amber-400 h-4 w-4"
+                        className="rounded border-[#d8e6de] accent-[#2d6a4f] h-4 w-4"
                       />
                       <span>Set calendar dates</span>
                     </label>
@@ -553,25 +592,25 @@ export default function TripPlannerPage() {
                   {useConcreteDates && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                       <div className="space-y-1.5">
-                        <span className="text-[11px] font-mono text-slate-400 uppercase">
+                        <span className="text-[11px] font-mono text-[#556b60] uppercase">
                           Departure Date
                         </span>
                         <input
                           type="date"
                           value={startDate}
                           onChange={(e) => setStartDate(e.target.value)}
-                          className="w-full rounded-lg border border-white/10 bg-slate-900 px-3.5 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none"
+                          className="w-full rounded-lg border border-[#d8e6de] bg-white px-3.5 py-2.5 text-xs text-[#1b2b22] focus:border-[#2d6a4f] focus:outline-none"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <span className="text-[11px] font-mono text-slate-400 uppercase">
+                        <span className="text-[11px] font-mono text-[#556b60] uppercase">
                           Return Date ({days} days)
                         </span>
                         <input
                           type="date"
                           value={endDate}
                           disabled
-                          className="w-full rounded-lg border border-white/5 bg-slate-900/50 px-3.5 py-2.5 text-xs text-slate-400 cursor-not-allowed"
+                          className="w-full rounded-lg border border-[#e2ece5] bg-[#f8faf9] px-3.5 py-2.5 text-xs text-[#8da397] cursor-not-allowed"
                         />
                       </div>
                     </div>
@@ -579,13 +618,13 @@ export default function TripPlannerPage() {
                 </div>
 
                 {/* Number of Travellers */}
-                <div className="space-y-3 rounded-xl border border-white/10 bg-[#0a0f18] p-6">
+                <div className="space-y-3 rounded-2xl border border-[#d8e6de] bg-white/95 p-6 shadow-sm">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                      <Users className="h-4 w-4 text-amber-400" />
+                    <label className="text-xs font-mono uppercase tracking-wider text-[#2d6a4f] flex items-center gap-2">
+                      <Users className="h-4 w-4 text-[#e08713]" />
                       Number of Travellers
                     </label>
-                    <span className="font-serif text-xl font-bold text-amber-300">
+                    <span className="font-serif text-xl font-bold text-[#2d6a4f]">
                       {travellers} {travellers === 1 ? "Person" : "People"}
                     </span>
                   </div>
@@ -601,14 +640,14 @@ export default function TripPlannerPage() {
                         key={opt.count}
                         type="button"
                         onClick={() => setTravellers(opt.count)}
-                        className={`flex flex-col items-center justify-center py-3 rounded-lg border transition ${
+                        className={`flex flex-col items-center justify-center py-3 rounded-xl border transition ${
                           travellers === opt.count
-                            ? "border-amber-400 bg-amber-400/15 text-white font-bold"
-                            : "border-white/5 bg-white/5 text-slate-400 hover:border-white/20 hover:text-white"
+                            ? "border-[#2d6a4f] bg-[#eef5f1] text-[#2d6a4f] font-bold shadow-sm"
+                            : "border-[#e2ece5] bg-white text-[#556b60] hover:border-[#2d6a4f]/30 hover:text-[#1b2b22]"
                         }`}
                       >
                         <span className="text-sm font-bold">{opt.count}</span>
-                        <span className="text-[10px] text-slate-400">{opt.label}</span>
+                        <span className="text-[10px] text-[#556b60]">{opt.label}</span>
                       </button>
                     ))}
                   </div>
@@ -619,7 +658,7 @@ export default function TripPlannerPage() {
                   <button
                     type="button"
                     onClick={() => setCurrentStep(2)}
-                    className="flex items-center gap-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 px-6 py-3 text-xs font-bold uppercase tracking-wider transition shadow-lg shadow-amber-400/20"
+                    className="flex items-center gap-2 rounded-xl bg-[#2d6a4f] hover:bg-[#23533e] text-white px-6 py-3 text-xs font-bold uppercase tracking-wider transition shadow-md shadow-[#2d6a4f]/20 cursor-pointer"
                   >
                     <span>Continue to Passions</span>
                     <ArrowRight className="h-4 w-4" />
@@ -632,13 +671,13 @@ export default function TripPlannerPage() {
             {currentStep === 2 && (
               <div className="space-y-8">
                 <div>
-                  <span className="text-xs uppercase font-mono tracking-widest text-amber-400 block mb-1">
+                  <span className="text-xs uppercase font-mono tracking-widest text-[#2d6a4f] block mb-1">
                     Step 02 of 04 • Passions & Style
                   </span>
-                  <h1 className="font-serif text-3xl sm:text-4xl font-normal text-white">
+                  <h1 className="font-serif text-3xl sm:text-4xl font-normal text-[#1b2b22]">
                     What draws you to Karnataka?
                   </h1>
-                  <p className="mt-2 text-sm text-slate-300 font-light">
+                  <p className="mt-2 text-sm text-[#556b60] font-light">
                     Select your core interests and preferred style of experience.
                   </p>
                 </div>
@@ -646,10 +685,10 @@ export default function TripPlannerPage() {
                 {/* Interests Chips */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-mono uppercase tracking-wider text-slate-300">
+                    <label className="text-xs font-mono uppercase tracking-wider text-[#2d6a4f]">
                       Core Interests (Select 1 to 9)
                     </label>
-                    <span className="text-xs font-mono text-amber-400">
+                    <span className="text-xs font-mono text-[#2d6a4f] font-semibold">
                       {interests.length} selected
                     </span>
                   </div>
@@ -665,13 +704,13 @@ export default function TripPlannerPage() {
                           onClick={() => toggleInterest(opt.backendValue)}
                           className={`flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all ${
                             active
-                              ? "border-amber-400 bg-amber-400/15 text-white shadow-md shadow-amber-500/10"
-                              : "border-white/10 bg-[#0a0f18] text-slate-400 hover:border-white/20 hover:text-white"
+                              ? "border-[#2d6a4f] bg-[#eef5f1] text-[#1b2b22] shadow-sm"
+                              : "border-[#e2ece5] bg-white text-[#556b60] hover:border-[#2d6a4f]/30 hover:text-[#1b2b22]"
                           }`}
                         >
                           <div
                             className={`flex h-8 w-8 items-center justify-center rounded-lg ${
-                              active ? "bg-amber-400 text-slate-950" : "bg-white/5 text-slate-300"
+                              active ? "bg-[#2d6a4f] text-white" : "bg-[#f4f7f5] text-[#2d6a4f]"
                             }`}
                           >
                             <Icon className="h-4 w-4" />
@@ -685,7 +724,7 @@ export default function TripPlannerPage() {
 
                 {/* Experience Preference Cards */}
                 <div className="space-y-3 pt-2">
-                  <label className="text-xs font-mono uppercase tracking-wider text-slate-300">
+                  <label className="text-xs font-mono uppercase tracking-wider text-[#2d6a4f]">
                     Experience Preference
                   </label>
 
@@ -700,15 +739,15 @@ export default function TripPlannerPage() {
                           onClick={() => setExperiencePref(opt.id)}
                           className={`flex flex-col text-left p-4 rounded-xl border transition-all ${
                             active
-                              ? "border-amber-400 bg-amber-400/15 text-white"
-                              : "border-white/10 bg-[#0a0f18] text-slate-400 hover:border-white/20 hover:text-slate-200"
+                              ? "border-[#2d6a4f] bg-[#eef5f1] text-[#1b2b22] shadow-sm"
+                              : "border-[#e2ece5] bg-white text-[#556b60] hover:border-[#2d6a4f]/30 hover:text-[#1b2b22]"
                           }`}
                         >
                           <div className="flex items-center gap-2 mb-1.5">
-                            <Icon className={`h-4 w-4 ${active ? "text-amber-400" : "text-slate-400"}`} />
-                            <span className="text-xs font-bold text-white">{opt.title}</span>
+                            <Icon className={`h-4 w-4 ${active ? "text-[#2d6a4f]" : "text-[#556b60]"}`} />
+                            <span className="text-xs font-bold text-[#1b2b22]">{opt.title}</span>
                           </div>
-                          <p className="text-[11px] text-slate-400 leading-relaxed">{opt.desc}</p>
+                          <p className="text-[11px] text-[#556b60] leading-relaxed">{opt.desc}</p>
                         </button>
                       );
                     })}
@@ -716,11 +755,11 @@ export default function TripPlannerPage() {
                 </div>
 
                 {/* Navigation Row */}
-                <div className="flex items-center justify-between pt-6 border-t border-white/10">
+                <div className="flex items-center justify-between pt-6 border-t border-[#e2ece5]">
                   <button
                     type="button"
                     onClick={() => setCurrentStep(1)}
-                    className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-slate-400 hover:text-white transition"
+                    className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#556b60] hover:text-[#1b2b22] transition"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     <span>Back</span>
@@ -729,7 +768,7 @@ export default function TripPlannerPage() {
                   <button
                     type="button"
                     onClick={() => setCurrentStep(3)}
-                    className="flex items-center gap-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 px-6 py-3 text-xs font-bold uppercase tracking-wider transition shadow-lg shadow-amber-400/20"
+                    className="flex items-center gap-2 rounded-xl bg-[#2d6a4f] hover:bg-[#23533e] text-white px-6 py-3 text-xs font-bold uppercase tracking-wider transition shadow-md shadow-[#2d6a4f]/20 cursor-pointer"
                   >
                     <span>Continue to Pacing & Budget</span>
                     <ArrowRight className="h-4 w-4" />
@@ -742,21 +781,21 @@ export default function TripPlannerPage() {
             {currentStep === 3 && (
               <div className="space-y-8">
                 <div>
-                  <span className="text-xs uppercase font-mono tracking-widest text-amber-400 block mb-1">
+                  <span className="text-xs uppercase font-mono tracking-widest text-[#2d6a4f] block mb-1">
                     Step 03 of 04 • Pacing & Investment
                   </span>
-                  <h1 className="font-serif text-3xl sm:text-4xl font-normal text-white">
+                  <h1 className="font-serif text-3xl sm:text-4xl font-normal text-[#1b2b22]">
                     How do you prefer to travel?
                   </h1>
-                  <p className="mt-2 text-sm text-slate-300 font-light">
+                  <p className="mt-2 text-sm text-[#556b60] font-light">
                     Balance your transit rhythm, comfort level, and target INR budget.
                   </p>
                 </div>
 
                 {/* Travel Pace */}
                 <div className="space-y-3">
-                  <label className="text-xs font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                    <Scale className="h-4 w-4 text-amber-400" />
+                  <label className="text-xs font-mono uppercase tracking-wider text-[#2d6a4f] flex items-center gap-2">
+                    <Scale className="h-4 w-4 text-[#e08713]" />
                     Travel Pace
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -789,15 +828,15 @@ export default function TripPlannerPage() {
                           onClick={() => setPace(item.p)}
                           className={`flex flex-col text-left p-4 rounded-xl border transition ${
                             active
-                              ? "border-amber-400 bg-amber-400/15 text-white"
-                              : "border-white/10 bg-[#0a0f18] text-slate-400 hover:border-white/20 hover:text-slate-200"
+                              ? "border-[#2d6a4f] bg-[#eef5f1] text-[#1b2b22] shadow-sm"
+                              : "border-[#e2ece5] bg-white text-[#556b60] hover:border-[#2d6a4f]/30 hover:text-[#1b2b22]"
                           }`}
                         >
                           <div className="flex items-center gap-2 mb-1">
-                            <Icon className={`h-4 w-4 ${active ? "text-amber-400" : "text-slate-400"}`} />
-                            <span className="text-xs font-bold text-white">{item.title}</span>
+                            <Icon className={`h-4 w-4 ${active ? "text-[#2d6a4f]" : "text-[#556b60]"}`} />
+                            <span className="text-xs font-bold text-[#1b2b22]">{item.title}</span>
                           </div>
-                          <span className="text-[11px] text-slate-400 leading-relaxed">{item.desc}</span>
+                          <span className="text-[11px] text-[#556b60] leading-relaxed">{item.desc}</span>
                         </button>
                       );
                     })}
@@ -806,8 +845,8 @@ export default function TripPlannerPage() {
 
                 {/* Transport Preference */}
                 <div className="space-y-3">
-                  <label className="text-xs font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                    <Car className="h-4 w-4 text-amber-400" />
+                  <label className="text-xs font-mono uppercase tracking-wider text-[#2d6a4f] flex items-center gap-2">
+                    <Car className="h-4 w-4 text-[#e08713]" />
                     Transport Preference
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -821,20 +860,20 @@ export default function TripPlannerPage() {
                           onClick={() => setTransportPref(item.id)}
                           className={`flex items-start gap-3 p-4 rounded-xl border text-left transition ${
                             active
-                              ? "border-amber-400 bg-amber-400/15 text-white"
-                              : "border-white/10 bg-[#0a0f18] text-slate-400 hover:border-white/20 hover:text-slate-200"
+                              ? "border-[#2d6a4f] bg-[#eef5f1] text-[#1b2b22] shadow-sm"
+                              : "border-[#e2ece5] bg-white text-[#556b60] hover:border-[#2d6a4f]/30 hover:text-[#1b2b22]"
                           }`}
                         >
                           <div
                             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-                              active ? "bg-amber-400 text-slate-950" : "bg-white/5 text-slate-300"
+                              active ? "bg-[#2d6a4f] text-white" : "bg-[#f4f7f5] text-[#2d6a4f]"
                             }`}
                           >
                             <Icon className="h-4 w-4" />
                           </div>
                           <div>
-                            <span className="text-xs font-bold text-white block">{item.label}</span>
-                            <span className="text-[11px] text-slate-400 leading-tight mt-0.5 block">
+                            <span className="text-xs font-bold text-[#1b2b22] block">{item.label}</span>
+                            <span className="text-[11px] text-[#556b60] leading-tight mt-0.5 block">
                               {item.desc}
                             </span>
                           </div>
@@ -845,42 +884,100 @@ export default function TripPlannerPage() {
                 </div>
 
                 {/* Total Budget in INR & Budget Tier */}
-                <div className="space-y-4 rounded-xl border border-white/10 bg-[#0a0f18] p-6">
+                <div className="space-y-4 rounded-2xl border border-[#d8e6de] bg-white/95 p-6 shadow-sm">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <label className="text-xs font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                      <Wallet className="h-4 w-4 text-amber-400" />
+                    <label className="text-xs font-mono uppercase tracking-wider text-[#2d6a4f] flex items-center gap-2">
+                      <Wallet className="h-4 w-4 text-[#e08713]" />
                       Total Trip Budget (INR)
                     </label>
-                    <span className="font-serif text-2xl font-bold text-amber-300">
-                      {formatInr(totalBudgetInr)}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#2d6a4f] font-mono text-sm font-bold">₹</span>
+                        <input
+                          id="budget-inr-input"
+                          type="number"
+                          min={1000}
+                          max={10000000}
+                          step={1000}
+                          value={totalBudgetInr || ""}
+                          onChange={(e) => setTotalBudgetInr(Math.max(0, Number(e.target.value)))}
+                          className="w-36 rounded-xl border border-[#d8e6de] bg-white pl-7 pr-3 py-1.5 text-sm font-bold font-mono text-[#2d6a4f] focus:border-[#2d6a4f] focus:outline-none shadow-sm"
+                          placeholder="Amount"
+                        />
+                      </div>
+                      <span className="font-serif text-2xl font-bold text-[#2d6a4f] hidden sm:inline">
+                        {formatInr(totalBudgetInr)}
+                      </span>
+                    </div>
                   </div>
 
                   <input
                     type="range"
-                    min={15000}
+                    min={1000}
                     max={300000}
-                    step={5000}
+                    step={1000}
                     value={totalBudgetInr}
                     onChange={(e) => setTotalBudgetInr(Number(e.target.value))}
-                    className="w-full accent-amber-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
+                    className="w-full accent-[#2d6a4f] cursor-pointer h-2 bg-[#e2ece5] rounded-lg"
                   />
 
+                  {/* Preset quick budget chips */}
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {[
+                      { amt: 10000, label: "₹10K" },
+                      { amt: 25000, label: "₹25K" },
+                      { amt: 50000, label: "₹50K" },
+                      { amt: 100000, label: "₹1 Lakh" },
+                      { amt: 200000, label: "₹2 Lakhs" },
+                    ].map((chip) => (
+                      <button
+                        key={chip.amt}
+                        type="button"
+                        onClick={() => setTotalBudgetInr(chip.amt)}
+                        className={`rounded-lg px-2.5 py-1 text-xs font-mono transition ${
+                          totalBudgetInr === chip.amt
+                            ? "bg-[#2d6a4f] text-white font-bold shadow-sm"
+                            : "bg-[#f4f7f5] text-[#556b60] hover:text-[#1b2b22] hover:bg-[#e8f1ec]"
+                        }`}
+                      >
+                        {chip.label}
+                      </button>
+                    ))}
+                  </div>
+
                   {/* Real Breakdown Display */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs text-slate-400 border-t border-white/5">
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs text-[#556b60] border-t border-[#e2ece5]">
                     <span>
                       Share per person:{" "}
-                      <strong className="text-white">{formatInr(perPersonTotal)}</strong>
+                      <strong className="text-[#1b2b22]">{formatInr(perPersonTotal)}</strong>
                     </span>
                     <span>
                       Average daily spend:{" "}
-                      <strong className="text-white">{formatInr(perPersonPerDay)} / day</strong>
+                      <strong className="text-[#1b2b22]">{formatInr(perPersonPerDay)} / day</strong>
                     </span>
                   </div>
 
+                  {/* Clear warning message if budget is too low */}
+                  {isBudgetTooLow && (
+                    <div
+                      id="budget-too-low-warning"
+                      className="rounded-xl border border-[#e08713]/40 bg-[#fff9ed] p-3.5 text-xs text-[#8c5000] flex items-start gap-2.5 animate-in fade-in"
+                    >
+                      <AlertCircle className="h-4 w-4 text-[#e08713] shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-bold text-[#8c5000] block">
+                          Budget Warning: ₹{formatInr(totalBudgetInr)} may be too low for this trip
+                        </span>
+                        <span className="text-[#6d3e00] text-[11px] block mt-0.5 leading-relaxed">
+                          A {days}-day trip for {travellers} {travellers === 1 ? "traveller" : "travellers"} in {budgetTier} class typically requires at least {formatInr(minRecommendedBudget)} (approx. {formatInr(minDailyPerPerson)}/person/day for stays, meals and travel). You can proceed, but our system will flag overages if minimum realistic expenses exceed your target.
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Budget Tier Selector */}
                   <div className="pt-3">
-                    <span className="text-[11px] font-mono uppercase text-slate-400 block mb-2">
+                    <span className="text-[11px] font-mono uppercase text-[#556b60] block mb-2 font-medium">
                       Preferred Comfort Class
                     </span>
                     <div className="grid grid-cols-3 gap-2">
@@ -895,8 +992,8 @@ export default function TripPlannerPage() {
                           onClick={() => setBudgetTier(t.tier)}
                           className={`rounded-lg py-2 px-1 text-center text-xs font-medium border transition ${
                             budgetTier === t.tier
-                              ? "border-amber-400 bg-amber-400 text-slate-950 font-bold"
-                              : "border-white/5 bg-white/5 text-slate-400 hover:text-white"
+                              ? "border-[#2d6a4f] bg-[#2d6a4f] text-white font-bold shadow-sm"
+                              : "border-[#e2ece5] bg-[#f4f7f5] text-[#556b60] hover:text-[#1b2b22] hover:bg-[#e8f1ec]"
                           }`}
                         >
                           {t.label}
@@ -907,11 +1004,11 @@ export default function TripPlannerPage() {
                 </div>
 
                 {/* Navigation Row */}
-                <div className="flex items-center justify-between pt-6 border-t border-white/10">
+                <div className="flex items-center justify-between pt-6 border-t border-[#e2ece5]">
                   <button
                     type="button"
                     onClick={() => setCurrentStep(2)}
-                    className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-slate-400 hover:text-white transition"
+                    className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#556b60] hover:text-[#1b2b22] transition"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     <span>Back</span>
@@ -920,7 +1017,7 @@ export default function TripPlannerPage() {
                   <button
                     type="button"
                     onClick={() => setCurrentStep(4)}
-                    className="flex items-center gap-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 px-6 py-3 text-xs font-bold uppercase tracking-wider transition shadow-lg shadow-amber-400/20"
+                    className="flex items-center gap-2 rounded-xl bg-[#2d6a4f] hover:bg-[#23533e] text-white px-6 py-3 text-xs font-bold uppercase tracking-wider transition shadow-md shadow-[#2d6a4f]/20 cursor-pointer"
                   >
                     <span>Review Journey Plan</span>
                     <ArrowRight className="h-4 w-4" />
@@ -933,32 +1030,32 @@ export default function TripPlannerPage() {
             {currentStep === 4 && (
               <div className="space-y-8">
                 <div>
-                  <span className="text-xs uppercase font-mono tracking-widest text-amber-400 block mb-1">
+                  <span className="text-xs uppercase font-mono tracking-widest text-[#2d6a4f] block mb-1">
                     Step 04 of 04 • Summary & Confirmation
                   </span>
-                  <h1 className="font-serif text-3xl sm:text-4xl font-normal text-white">
+                  <h1 className="font-serif text-3xl sm:text-4xl font-normal text-[#1b2b22]">
                     Review Your Preferences
                   </h1>
-                  <p className="mt-2 text-sm text-slate-300 font-light">
+                  <p className="mt-2 text-sm text-[#556b60] font-light">
                     Ensure these parameters reflect your intended Karnataka journey before we generate
                     the complete route.
                   </p>
                 </div>
 
                 {/* Summary Card with Edit Actions */}
-                <div className="rounded-xl border border-white/10 bg-[#0a0f18] p-6 sm:p-8 space-y-6">
+                <div className="rounded-2xl border border-[#d8e6de] bg-white/95 p-6 sm:p-8 space-y-6 shadow-sm">
                   {/* Row 1: Origin & Duration */}
-                  <div className="flex items-start justify-between pb-5 border-b border-white/5">
+                  <div className="flex items-start justify-between pb-5 border-b border-[#e2ece5]">
                     <div>
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 block">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-[#556b60] block">
                         Origin & Duration
                       </span>
-                      <div className="font-serif text-lg font-bold text-white mt-0.5">
+                      <div className="font-serif text-lg font-bold text-[#1b2b22] mt-0.5">
                         {startCity.toUpperCase()} • {days} Days ({travellers}{" "}
                         {travellers === 1 ? "Traveller" : "Travellers"})
                       </div>
                       {useConcreteDates && startDate && (
-                        <div className="text-xs text-slate-400 mt-0.5">
+                        <div className="text-xs text-[#556b60] mt-0.5">
                           Dates: {startDate} to {endDate}
                         </div>
                       )}
@@ -967,7 +1064,7 @@ export default function TripPlannerPage() {
                     <button
                       type="button"
                       onClick={() => setCurrentStep(1)}
-                      className="text-xs font-mono text-amber-400 hover:underline flex items-center gap-1"
+                      className="text-xs font-mono text-[#2d6a4f] hover:underline flex items-center gap-1 font-semibold"
                     >
                       <Edit3 className="h-3.5 w-3.5" />
                       <span>Edit</span>
@@ -975,24 +1072,24 @@ export default function TripPlannerPage() {
                   </div>
 
                   {/* Row 2: Selected Passions & Style */}
-                  <div className="flex items-start justify-between pb-5 border-b border-white/5">
+                  <div className="flex items-start justify-between pb-5 border-b border-[#e2ece5]">
                     <div>
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 block mb-2">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-[#556b60] block mb-2">
                         Passions & Style
                       </span>
                       <div className="flex flex-wrap gap-1.5 mb-2">
                         {interests.map((i) => (
                           <span
                             key={i}
-                            className="rounded-md border border-amber-400/30 bg-amber-400/10 px-2.5 py-0.5 text-xs text-amber-300 capitalize"
+                            className="rounded-md border border-[#2d6a4f]/30 bg-[#eef5f1] px-2.5 py-0.5 text-xs text-[#2d6a4f] font-medium capitalize"
                           >
                             {i}
                           </span>
                         ))}
                       </div>
-                      <div className="text-xs text-slate-400">
+                      <div className="text-xs text-[#556b60]">
                         Experience Style:{" "}
-                        <strong className="text-slate-200 capitalize">
+                        <strong className="text-[#1b2b22] capitalize">
                           {experiencePref.replace("_", " ")}
                         </strong>
                       </div>
@@ -1001,7 +1098,7 @@ export default function TripPlannerPage() {
                     <button
                       type="button"
                       onClick={() => setCurrentStep(2)}
-                      className="text-xs font-mono text-amber-400 hover:underline flex items-center gap-1"
+                      className="text-xs font-mono text-[#2d6a4f] hover:underline flex items-center gap-1 font-semibold"
                     >
                       <Edit3 className="h-3.5 w-3.5" />
                       <span>Edit</span>
@@ -1011,27 +1108,35 @@ export default function TripPlannerPage() {
                   {/* Row 3: Pacing, Transport & Budget */}
                   <div className="flex items-start justify-between">
                     <div>
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 block">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-[#556b60] block">
                         Pacing & Investment
                       </span>
-                      <div className="font-serif text-lg font-bold text-white mt-0.5">
+                      <div className="font-serif text-lg font-bold text-[#1b2b22] mt-0.5">
                         {formatInr(totalBudgetInr)}{" "}
-                        <span className="text-xs text-slate-400 font-sans font-normal">
+                        <span className="text-xs text-[#556b60] font-sans font-normal">
                           ({budgetTier} tier • {pace} pace)
                         </span>
                       </div>
-                      <div className="text-xs text-slate-400 mt-1">
+                      <div className="text-xs text-[#556b60] mt-1">
                         Transport:{" "}
-                        <strong className="text-slate-200 capitalize">
+                        <strong className="text-[#1b2b22] capitalize">
                           {transportPref.replace("_", " ")}
                         </strong>
                       </div>
+                      {isBudgetTooLow && (
+                        <div className="mt-2 text-[11px] text-[#8c5000] bg-[#fff9ed] border border-[#e08713]/30 rounded-lg p-2 flex items-center gap-1.5">
+                          <AlertCircle className="h-3.5 w-3.5 text-[#e08713] shrink-0" />
+                          <span>
+                            Budget Notice: Target INR is low for a {days}-day trip for {travellers} in {budgetTier} class (typical min: {formatInr(minRecommendedBudget)}).
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     <button
                       type="button"
                       onClick={() => setCurrentStep(3)}
-                      className="text-xs font-mono text-amber-400 hover:underline flex items-center gap-1"
+                      className="text-xs font-mono text-[#2d6a4f] hover:underline flex items-center gap-1 font-semibold"
                     >
                       <Edit3 className="h-3.5 w-3.5" />
                       <span>Edit</span>
@@ -1040,12 +1145,12 @@ export default function TripPlannerPage() {
                 </div>
 
                 {/* Planner Engine Mode Toggle */}
-                <div className="rounded-xl border border-white/5 bg-[#0a0f18] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="rounded-2xl border border-[#d8e6de] bg-white/95 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
                   <div>
-                    <span className="text-xs font-mono uppercase tracking-wider text-slate-300 block">
+                    <span className="text-xs font-mono uppercase tracking-wider text-[#2d6a4f] block font-semibold">
                       Planning Engine
                     </span>
-                    <span className="text-xs text-slate-400 font-light block mt-0.5">
+                    <span className="text-xs text-[#556b60] font-light block mt-0.5">
                       Auto selects the AI engine with deterministic fallback guarantees.
                     </span>
                   </div>
@@ -1060,10 +1165,10 @@ export default function TripPlannerPage() {
                         key={m.mode}
                         type="button"
                         onClick={() => setPlannerMode(m.mode)}
-                        className={`rounded px-3 py-1 text-xs font-mono uppercase transition ${
+                        className={`rounded-lg px-3 py-1.5 text-xs font-mono uppercase transition ${
                           plannerMode === m.mode
-                            ? "bg-amber-400 text-slate-950 font-bold"
-                            : "bg-white/5 text-slate-400 hover:text-white"
+                            ? "bg-[#2d6a4f] text-white font-bold shadow-sm"
+                            : "bg-[#f4f7f5] text-[#556b60] hover:text-[#1b2b22] hover:bg-[#e8f1ec]"
                         }`}
                       >
                         {m.label}
@@ -1073,11 +1178,11 @@ export default function TripPlannerPage() {
                 </div>
 
                 {/* Navigation and Main Action */}
-                <div className="flex items-center justify-between pt-6 border-t border-white/10">
+                <div className="flex items-center justify-between pt-6 border-t border-[#e2ece5]">
                   <button
                     type="button"
                     onClick={() => setCurrentStep(3)}
-                    className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-slate-400 hover:text-white transition"
+                    className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#556b60] hover:text-[#1b2b22] transition"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     <span>Back</span>
@@ -1086,7 +1191,7 @@ export default function TripPlannerPage() {
                   <button
                     type="button"
                     onClick={handleGenerateJourney}
-                    className="flex items-center gap-3 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 px-8 py-4 text-xs font-bold uppercase tracking-wider transition-all duration-200 shadow-xl shadow-amber-400/30 hover:scale-[1.02]"
+                    className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-[#e08713] to-[#c77207] hover:from-[#d17a0b] hover:to-[#b86603] text-white px-8 py-4 text-xs font-bold uppercase tracking-wider transition-all duration-200 shadow-xl shadow-[#e08713]/25 hover:scale-[1.02] cursor-pointer"
                   >
                     <Sparkles className="h-4 w-4" />
                     <span>Generate My Journey</span>
@@ -1099,7 +1204,7 @@ export default function TripPlannerPage() {
       </main>
 
       {/* Subtle Footer */}
-      <footer className="border-t border-white/10 py-6 text-center text-xs text-slate-500 font-mono">
+      <footer className="border-t border-[#e2ece5] bg-white/70 py-6 text-center text-xs text-[#556b60] font-mono">
         Karnataka Trails AI • 38 Curated Hubs • Verified Geodata & Distance Graph
       </footer>
     </div>

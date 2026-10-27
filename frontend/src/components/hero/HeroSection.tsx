@@ -1,149 +1,150 @@
-import { useState, useEffect } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Compass, MapPin } from "lucide-react";
+import KarnatakaRouteMap from "./KarnatakaRouteMap";
 
 interface HeroSectionProps {
   onCreateItinerary: () => void;
   onExploreKarnataka: () => void;
 }
 
-const HERO_IMAGES = [
-  {
-    url: "/images/hampi.jpg",
-    location: "Hampi, Vijayanagara",
-    caption: "Ancient granite ruins and stone chariots under sunset skies",
-  },
-  {
-    url: "/images/coorg.jpg",
-    location: "Coorg, Western Ghats",
-    caption: "Mist-draped coffee plantations and emerald mountain ridges",
-  },
-  {
-    url: "/images/gokarna.jpg",
-    location: "Gokarna, Karavali Coast",
-    caption: "Pristine Arabian Sea coves and coastal cliffs",
-  },
-];
-
 export default function HeroSection({
   onCreateItinerary,
   onExploreKarnataka,
 }: HeroSectionProps) {
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveImageIndex((prev) => (prev + 1) % HERO_IMAGES.length);
-    }, 9000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const currentImage = HERO_IMAGES[activeImageIndex];
-
   return (
-    <section className="relative min-h-screen w-full flex flex-col justify-between overflow-hidden">
-      {/* Background with Restrained Motion and Scrim */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        {HERO_IMAGES.map((img, idx) => (
-          <div
-            key={img.url}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-              idx === activeImageIndex ? "opacity-100 scale-105" : "opacity-0 scale-100 pointer-events-none"
-            }`}
-            style={{
-              backgroundImage: `url(${img.url})`,
-              backgroundPosition: "center",
-              backgroundSize: "cover",
-              transition: "opacity 1.5s ease-in-out, transform 12s ease-out",
-            }}
-          />
-        ))}
+    <section className="relative w-full overflow-hidden select-none">
+      {/* Soft, warm, pale background with delicate peach and sky-blue atmospheric glows */}
+      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none" aria-hidden="true">
+        {/* Base warm ivory */}
+        <div className="absolute inset-0 bg-[#FFFBF2]" />
 
-        {/* Editorial Gradients & High Contrast Scrim */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#070b12] via-[#070b12]/50 to-[#070b12]/70" />
-        <div className="absolute inset-0 bg-radial-gradient from-transparent via-black/40 to-black/80" />
+        {/* Soft Peach luminous glow in the top-right */}
+        <div className="absolute -top-32 right-[-5%] w-[38rem] h-[38rem] rounded-full bg-[#FDEBD8]/80 blur-3xl" />
+
+        {/* Pale Sky-blue luminous glow in center-left */}
+        <div className="absolute top-48 left-[-10%] w-[34rem] h-[34rem] rounded-full bg-[#E6F1F7]/75 blur-3xl" />
+
+        {/* Faint marigold warmth in bottom-center */}
+        <div className="absolute bottom-[-10%] left-[30%] w-[28rem] h-[28rem] rounded-full bg-[#F2A93B]/10 blur-3xl" />
+
+        {/* Ambient radial overlay ensuring seamless blend */}
+        <div className="absolute inset-0 bg-radial-gradient from-transparent via-[#FFFBF2]/30 to-[#FFFBF2]" />
       </div>
 
-      {/* Hero Header Space */}
-      <div className="pt-24" />
+      {/* Main Split Layout Container */}
+      <div className="mx-auto w-full max-w-7xl px-6 sm:px-10 pt-28 sm:pt-32 lg:pt-36 pb-16 sm:pb-20 lg:pb-24">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 xl:gap-14 items-center">
+          
+          {/* ========================================================================= */}
+          {/* LEFT SIDE: Editorial Typography, Actions & Trust Stats                    */}
+          {/* ========================================================================= */}
+          <div className="lg:col-span-7 xl:col-span-7 flex flex-col justify-center text-left">
+            {/* Small pill label */}
+            <div className="inline-flex items-center gap-2 self-start rounded-full border border-[#F2A93B]/35 bg-white/85 px-4 py-1.5 text-xs font-medium text-[#1B2B27] shadow-xs backdrop-blur-md mb-6">
+              <span className="h-2 w-2 rounded-full bg-[#F2A93B] animate-pulse" />
+              <span className="tracking-wide font-medium">Karnataka AI Travel Planner</span>
+              <span className="text-[#F2A93B]/60">•</span>
+              <span className="text-[#1F7A7A] font-semibold">Authentic Circuits</span>
+            </div>
 
-      {/* Main Editorial Content */}
-      <div className="mx-auto w-full max-w-7xl px-6 sm:px-10 py-12 flex flex-col justify-center my-auto">
-        <div className="max-w-3xl">
-          {/* Subtle Category Pill */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1 text-xs uppercase tracking-widest text-amber-300 backdrop-blur-md mb-6">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-            <span>AI-Orchestrated Travel Planning</span>
+            {/* Big Headline */}
+            <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-[4rem] xl:text-[4.5rem] font-normal tracking-tight text-[#1B2B27] leading-[1.12]">
+              Discover Karnataka, <br className="hidden sm:inline" />
+              <span className="italic font-light text-[#F2A93B]">
+                Your Way.
+              </span>
+            </h1>
+
+            {/* Short Subtitle */}
+            <p className="mt-6 text-base sm:text-lg text-[#2C3E38] font-normal leading-relaxed max-w-xl">
+              From mist-shrouded Western Ghats coffee ridges to sun-drenched Hoysala stone temples
+              and quiet Arabian Sea shores. Craft an itinerary tailored to your pace, passions, and
+              budget with real highway drive hours and verified regional costs.
+            </p>
+
+            {/* Action Buttons: Plan My Trip & Explore Destinations */}
+            <div className="mt-8 sm:mt-10 flex flex-wrap items-center gap-4">
+              {/* Primary Button: Plan My Trip (Karnataka Saffron/Marigold) */}
+              <button
+                type="button"
+                id="hero-plan-btn"
+                onClick={onCreateItinerary}
+                className="group flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-[#F2A93B] via-[#E59828] to-[#D98C1E] hover:from-[#E59828] hover:to-[#C67B13] text-white px-7 py-3.5 text-sm font-semibold tracking-wide transition-all duration-200 shadow-md shadow-[#F2A93B]/25 hover:shadow-lg hover:shadow-[#F2A93B]/35 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+              >
+                <Compass className="h-4 w-4 transition-transform duration-300 group-hover:rotate-45" />
+                <span>Plan My Trip</span>
+                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+              </button>
+
+              {/* Secondary Button: Explore Destinations (Peacock Teal / Ivory) */}
+              <button
+                type="button"
+                id="hero-explore-btn"
+                onClick={onExploreKarnataka}
+                className="flex items-center gap-2 rounded-xl border border-[#1F7A7A]/30 bg-white/90 hover:bg-white text-[#1F7A7A] hover:text-[#166060] px-6 py-3.5 text-sm font-medium tracking-wide shadow-xs backdrop-blur-md transition-all duration-200 hover:border-[#1F7A7A]/50 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+              >
+                <MapPin className="h-4 w-4 text-[#1F7A7A]" />
+                <span>Explore Destinations</span>
+              </button>
+            </div>
+
+            {/* 3 Small Trust Stats */}
+            <div className="mt-10 pt-8 border-t border-[#FDEBD8] grid grid-cols-3 gap-3 sm:gap-4 max-w-lg">
+              {/* Stat 1 */}
+              <div className="rounded-xl border border-[#F2A93B]/20 bg-white/70 p-3 sm:p-3.5 backdrop-blur-xs shadow-xs transition-transform duration-200 hover:-translate-y-0.5">
+                <span className="block font-serif text-xl sm:text-2xl font-bold text-[#1B2B27]">38</span>
+                <span className="text-[11px] sm:text-xs font-medium text-[#536B63] leading-tight block mt-0.5">
+                  Curated Destinations
+                </span>
+              </div>
+
+              {/* Stat 2 */}
+              <div className="rounded-xl border border-[#F2A93B]/20 bg-white/70 p-3 sm:p-3.5 backdrop-blur-xs shadow-xs transition-transform duration-200 hover:-translate-y-0.5">
+                <span className="block font-serif text-xl sm:text-2xl font-bold text-[#1B2B27]">31</span>
+                <span className="text-[11px] sm:text-xs font-medium text-[#536B63] leading-tight block mt-0.5">
+                  Districts
+                </span>
+              </div>
+
+              {/* Stat 3 */}
+              <div className="rounded-xl border border-[#F2A93B]/20 bg-white/70 p-3 sm:p-3.5 backdrop-blur-xs shadow-xs transition-transform duration-200 hover:-translate-y-0.5">
+                <span className="block font-serif text-xl sm:text-2xl font-bold text-[#1B2B27]">AI + Smart</span>
+                <span className="text-[11px] sm:text-xs font-medium text-[#536B63] leading-tight block mt-0.5">
+                  Planner
+                </span>
+              </div>
+            </div>
           </div>
 
-          {/* Large Editorial Headline */}
-          <h1 className="font-serif text-4xl sm:text-6xl md:text-7xl font-normal tracking-tight text-white leading-[1.1]">
-            Your Karnataka. <br />
-            <span className="italic font-light text-amber-200">
-              Your Kind of Journey.
-            </span>
-          </h1>
+          {/* ========================================================================= */}
+          {/* RIGHT SIDE: Floating Karnataka Map Visual with Dotted Route & Moving Car   */}
+          {/* ========================================================================= */}
+          <div className="lg:col-span-5 xl:col-span-5 flex justify-center items-center w-full">
+            <div className="relative w-full max-w-[420px] sm:max-w-[480px] lg:max-w-[520px] xl:max-w-[560px] aspect-[1226/1283] flex items-center justify-center">
+              {/* Seamless Floating Karnataka Map & Silk Ribbons - No borders, no arch, no grey panel */}
+              <picture className="block w-full h-full pointer-events-none select-none">
+                <source
+                  type="image/webp"
+                  srcSet="/images/hero-karnataka-transparent-640.webp 640w, /images/hero-karnataka-transparent-1024.webp 1024w, /images/hero-karnataka-transparent-1600.webp 1600w"
+                  sizes="(max-width: 640px) 420px, (max-width: 1024px) 480px, 560px"
+                />
+                <img
+                  src="/images/hero-karnataka-transparent.png"
+                  alt="Illustrated map of Karnataka with flowing silk ribbons"
+                  width={1226}
+                  height={1283}
+                  loading="eager"
+                  fetchPriority="high"
+                  className="w-full h-full object-contain pointer-events-none select-none drop-shadow-xs"
+                />
+              </picture>
 
-          {/* Supporting Text */}
-          <p className="mt-6 text-base sm:text-lg text-slate-300 font-light leading-relaxed max-w-2xl">
-            From boulder-strewn UNESCO kingdoms to rainforest coffee ridges and quiet Arabian
-            Sea cliffs — create a multi-day itinerary custom-tailored to your passions, time,
-            and budget. Grounded in real road distances and verified regional costs.
-          </p>
-
-          {/* Action Buttons */}
-          <div className="mt-9 flex flex-wrap items-center gap-4">
-            <button
-              type="button"
-              onClick={onCreateItinerary}
-              className="flex items-center gap-3 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 px-7 py-3.5 text-xs font-bold uppercase tracking-wider transition-all duration-200 shadow-xl shadow-amber-400/20 hover:scale-[1.02]"
-            >
-              <span>Create My Itinerary</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
-
-            <button
-              type="button"
-              onClick={onExploreKarnataka}
-              className="flex items-center gap-2 rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 text-white px-6 py-3.5 text-xs font-semibold uppercase tracking-wider backdrop-blur-md transition-all duration-200 hover:border-white/30"
-            >
-              <span>Explore Karnataka</span>
-            </button>
+              {/* Dotted Route, Glowing Waypoint Dots, and Moving Car Overlay */}
+              <div className="absolute inset-0 pointer-events-none z-10">
+                <KarnatakaRouteMap />
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Bottom Bar: Location Caption & Understated Scroll Indicator */}
-      <div className="mx-auto w-full max-w-7xl px-6 sm:px-10 pb-8 flex items-end justify-between text-xs text-slate-400">
-        {/* Subtle Location Caption */}
-        <div className="hidden sm:flex flex-col">
-          <span className="text-[10px] uppercase tracking-widest text-slate-500 font-mono">
-            Featured Landscape
-          </span>
-          <span className="text-slate-300 font-medium mt-0.5">{currentImage.location}</span>
-          <span className="text-slate-400 text-[11px] font-light">{currentImage.caption}</span>
-        </div>
-
-        {/* Understated Scroll Indicator */}
-        <button
-          type="button"
-          onClick={onExploreKarnataka}
-          className="group mx-auto sm:mx-0 flex flex-col items-center gap-2 text-slate-400 hover:text-white transition-colors cursor-pointer"
-        >
-          <span className="text-[10px] uppercase tracking-widest font-mono">
-            Scroll to Discover
-          </span>
-          <div className="flex h-7 w-4 items-start justify-center rounded-full border border-white/20 p-1">
-            <div className="h-1.5 w-1 rounded-full bg-amber-400 animate-bounce" />
-          </div>
-        </button>
-
-        {/* Verification Tag */}
-        <div className="hidden lg:flex flex-col items-end text-right">
-          <span className="text-[10px] uppercase tracking-widest text-slate-500 font-mono">
-            Geocoded Data
-          </span>
-          <span className="text-slate-300 font-medium mt-0.5">31 Districts • 67 Destinations</span>
-          <span className="text-slate-400 text-[11px] font-light">Zero-hallucination routing</span>
         </div>
       </div>
     </section>

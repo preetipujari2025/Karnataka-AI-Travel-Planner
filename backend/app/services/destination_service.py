@@ -213,24 +213,51 @@ def search_by_name(query: str, *, limit: Optional[int] = 10) -> list[Destination
     """Case-insensitive name search. Exact matches rank before prefix before substring.
 
     `limit=None` returns every match (needed when intersecting with filters).
+    Supports common spelling variants, district names, and stable destination ids.
     """
     needle = query.strip().lower()
     if not needle:
         return []
 
+    from app.data.loader import COMMON_ALIASES
+    alias_target = COMMON_ALIASES.get(needle)
+    target_aliases: list[str] = [alias_target] if alias_target else []
+    for alias_key, alias_val in COMMON_ALIASES.items():
+        if alias_val == needle and alias_key not in target_aliases:
+            target_aliases.append(alias_key)
+
     exact: list[DestinationRecord] = []
     prefix: list[DestinationRecord] = []
     substring: list[DestinationRecord] = []
+    alias_matches: list[DestinationRecord] = []
+    seen_ids: set[str] = set()
+
     for destination in catalog_destinations():
         name = destination.name.lower()
-        if name == needle:
-            exact.append(destination)
-        elif name.startswith(needle):
-            prefix.append(destination)
-        elif needle in name:
-            substring.append(destination)
+        dest_id = destination.id.lower()
+        dest_district = (destination.district or "").lower()
 
-    ranked = exact + prefix + substring
+        if name == needle or dest_id == needle:
+            exact.append(destination)
+            seen_ids.add(dest_id)
+        elif name.startswith(needle) or dest_id.startswith(needle):
+            prefix.append(destination)
+            seen_ids.add(dest_id)
+        elif needle in name or (dest_district and needle in dest_district):
+            substring.append(destination)
+            seen_ids.add(dest_id)
+
+    # Check alias matches
+    for destination in catalog_destinations():
+        dest_id = destination.id.lower()
+        if dest_id in seen_ids:
+            continue
+        name = destination.name.lower()
+        if any(tgt and (tgt == dest_id or tgt in name or tgt in dest_id) for tgt in target_aliases):
+            alias_matches.append(destination)
+            seen_ids.add(dest_id)
+
+    ranked = exact + prefix + substring + alias_matches
     return ranked if limit is None else ranked[:limit]
 
 

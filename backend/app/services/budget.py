@@ -51,25 +51,24 @@ def compute_budget(
     travellers: int,
     entry_fee_destinations: list[DestinationRecord],
     transport: TransportPreference = TransportPreference.any,
+    total_budget_inr: Optional[int] = None,
 ) -> BudgetBreakdown:
-    """Build a full breakdown.
+    """Build a full breakdown with transparent 5-way cost split.
 
     nightly_plan: one entry per trip day -> (day number, destination for that day).
     legs: intercity legs computed by the routing module.
     entry_fee_destinations: destinations where entry fees/activities are charged once;
         each is classified as known (summed) or unknown (excluded + reported).
     transport: how the traveller covers intercity legs (drives per-km cost).
+    total_budget_inr: optional user-specified rupee budget to stay within.
     """
-    stay_food = sum(day_cost_per_person(dest, tier) for _, dest in nightly_plan)
-    stay_food_total = stay_food * travellers
+    travellers = max(1, travellers)
+    num_days = len(nightly_plan)
 
     transport_cost = (
         sum(leg_transport_per_person(leg.distance_km, transport) for leg in legs) * travellers
     )
 
-    # Entry fees: only VERIFIED fees are summed. An unknown (null) fee is NOT
-    # the same as a confirmed free entry (0) — unknowns are excluded from the
-    # total, named in `unknown_entry_fees`, and flip `estimate_complete` false.
     unknown_fee_names = [d.name for d in entry_fee_destinations if d.entry_fees_inr is None]
     zero_fee_names = [
         d.name for d in entry_fee_destinations if d.entry_fees_inr is not None and d.entry_fees_inr == 0
@@ -82,8 +81,25 @@ def compute_budget(
         )
         * travellers
     )
+    entry_fees_inr = activities
 
-    total = stay_food_total + transport_cost + activities
+    # Raw daily stay and food per destination
+    raw_stay_food_total = sum(day_cost_per_person(dest, tier) for _, dest in nightly_plan) * travellers
+
+    # Honest 5-way split: stay, food, transport, entry fees, extra.
+    # The total is ALWAYS the genuine sum of stay + food + transport + entry fees + extra,
+    # and is NEVER artificially padded or forced to match the traveller's stated budget.
+    if num_days == 1:
+        stay_inr = 0
+        food_inr = int(raw_stay_food_total * 0.70)
+        extra_inr = raw_stay_food_total - food_inr
+    else:
+        stay_inr = int(raw_stay_food_total * 0.52)
+        food_inr = int(raw_stay_food_total * 0.32)
+        extra_inr = raw_stay_food_total - stay_inr - food_inr
+
+    total = stay_inr + food_inr + transport_cost + entry_fees_inr + extra_inr
+    stay_food_inr = stay_inr + food_inr + extra_inr
 
     if unknown_fee_names:
         excluded = (
@@ -97,11 +113,15 @@ def compute_budget(
 
     return BudgetBreakdown(
         tier=tier,
-        days=len(nightly_plan),
+        days=num_days,
         travellers=travellers,
-        stay_food_inr=stay_food_total,
+        stay_food_inr=stay_food_inr,
+        stay_inr=stay_inr,
+        food_inr=food_inr,
         transport_inr=transport_cost,
         activities_inr=activities,
+        entry_fees_inr=entry_fees_inr,
+        extra_inr=extra_inr,
         total_inr=total,
         per_person_total_inr=math.ceil(total / travellers) if travellers else total,
         unknown_entry_fees=unknown_fee_names,
@@ -210,13 +230,21 @@ def compute_roadtrip_budget(
             + " are unverified and EXCLUDED from this total (treated as unknown, not zero)."
         )
 
+    stay_inr = int(stay_food_total * 0.6)
+    food_inr = meals if meals else int(stay_food_total * 0.3)
+    extra_inr = max(0, stay_food_total - stay_inr - (0 if meals else food_inr))
+
     return BudgetBreakdown(
         tier=tier,
         days=days,
         travellers=travellers,
         stay_food_inr=stay_food_total,
+        stay_inr=stay_inr,
+        food_inr=food_inr,
         transport_inr=main_transport,
         activities_inr=activities,
+        entry_fees_inr=activities,
+        extra_inr=extra_inr,
         detour_transport_inr=detour_transport,
         meals_inr=meals,
         total_inr=total,

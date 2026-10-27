@@ -43,10 +43,13 @@ def _apply_budget_fit(plan, trip: TripRequest):
     fit = _budget_fit(plan.budget.total_inr, trip.total_budget_inr)
     if fit.within_budget is False:
         over = abs(int(fit.variance_inr or 0))
-        plan.warnings.append(
-            f"Estimated cost INR {plan.budget.total_inr} exceeds your total budget "
-            f"INR {trip.total_budget_inr} by INR {over}."
+        msg = (
+            f"Budget Warning: Estimated minimum trip cost of INR {plan.budget.total_inr:,} "
+            f"exceeds your total budget INR {trip.total_budget_inr} by INR {over:,}. "
+            "Consider shortening your trip, switching to the Budget Explorer tier, or using public transport."
         )
+        if not any("Budget Warning" in w for w in plan.warnings):
+            plan.warnings.append(msg)
     return GenerateItineraryResponse(**plan.model_dump(), budget_fit=fit)
 
 

@@ -10,6 +10,8 @@ export const DEFAULT_REQUEST: PlanRequest = {
   start_city: "bengaluru",
   start_month: 12,
   planner: "auto",
+  total_budget_inr: 45000,
+  experience_preference: "cultural",
 };
 
 const MONTHS = [
@@ -127,6 +129,49 @@ export default function PlannerForm({ meta, value, onChange, onSubmit, planning 
           ))}
         </div>
       </Fieldset>
+
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="font-medium text-slate-700">Total Budget (INR)</span>
+        <input
+          type="number"
+          min={1000}
+          max={10000000}
+          step={1000}
+          value={value.total_budget_inr || 45000}
+          onChange={(e) => onChange({ ...value, total_budget_inr: Number(e.target.value) })}
+          className="rounded-md border border-slate-300 px-3 py-2"
+        />
+        {(() => {
+          const minDaily = value.budget_tier === "luxury" ? 7000 : value.budget_tier === "mid" ? 2500 : 1200;
+          const minTotal = (value.days || 1) * (value.travellers || 1) * minDaily;
+          if ((value.total_budget_inr || 45000) < minTotal) {
+            return (
+              <span className="text-xs text-amber-600 font-medium">
+                ⚠️ Budget warning: ₹{(value.total_budget_inr || 45000).toLocaleString("en-IN")} is low for a {value.days}-day trip for {value.travellers} people (min est: ₹{minTotal.toLocaleString("en-IN")}).
+              </span>
+            );
+          }
+          return null;
+        })()}
+      </label>
+
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="font-medium text-slate-700">Preferred Type of Experience</span>
+        <select
+          value={value.experience_preference || "cultural"}
+          onChange={(e) => onChange({ ...value, experience_preference: e.target.value as any })}
+          className="rounded-md border border-slate-300 px-3 py-2"
+        >
+          <option value="cultural">Cultural</option>
+          <option value="adventure">Adventure</option>
+          <option value="relaxed">Relaxed</option>
+          <option value="family">Family</option>
+          <option value="solo">Solo</option>
+          <option value="couple">Couple</option>
+          <option value="luxury">Luxury</option>
+          <option value="budget_backpacking">Budget Backpacking</option>
+        </select>
+      </label>
 
       <Fieldset legend="Travel style">
         <div className="flex flex-col gap-1">

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { MapPin, Search, X, Check, ChevronDown, Compass, Building2 } from "lucide-react";
 import type { DestinationSummary } from "../../api/types";
+import { DEFAULT_START_HUBS, COMMON_SPELLING_VARIANTS } from "../../lib/destinationsData";
 
 interface StartLocationSelectorProps {
   value: string;
@@ -46,31 +47,63 @@ export default function StartLocationSelector({
     }
   }, [isOpen]);
 
+  // Fall back to built-in verified start hubs if cities prop is empty or loading
+  const effectiveCities = useMemo(() => {
+    if (cities && cities.length > 0) {
+      return cities;
+    }
+    return DEFAULT_START_HUBS as unknown as DestinationSummary[];
+  }, [cities]);
+
   // Selected item
   const selectedLocation = useMemo(() => {
     return (
-      cities.find((c) => c.id.toLowerCase() === value.toLowerCase()) ||
-      cities.find((c) => value.toLowerCase().includes(c.id.toLowerCase())) ||
-      cities[0] || {
+      effectiveCities.find((c) => c.id.toLowerCase() === value.toLowerCase()) ||
+      effectiveCities.find((c) => value.toLowerCase().includes(c.id.toLowerCase())) ||
+      effectiveCities[0] || {
         id: "bengaluru",
         name: "Bengaluru",
         region: "Capital Region",
       }
     );
-  }, [cities, value]);
+  }, [effectiveCities, value]);
 
-  // Filtered locations based on search query
+  // Filtered locations based on search query with common spelling variants support
   const filteredCities = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return cities;
-    return cities.filter(
-      (c) =>
-        c.name.toLowerCase().includes(q) ||
-        c.region.toLowerCase().includes(q) ||
-        c.id.toLowerCase().includes(q) ||
-        (c.description && c.description.toLowerCase().includes(q))
-    );
-  }, [cities, searchQuery]);
+    if (!q) return effectiveCities;
+
+    // Check if query or any part of query has aliases/variants
+    const searchTerms = [q];
+    for (const [key, variants] of Object.entries(COMMON_SPELLING_VARIANTS)) {
+      if (q === key || q.includes(key) || key.includes(q)) {
+        searchTerms.push(...variants);
+      }
+      for (const v of variants) {
+        if (q === v || q.includes(v) || v.includes(q)) {
+          searchTerms.push(key, ...variants);
+        }
+      }
+    }
+    const uniqueTerms = Array.from(new Set(searchTerms.map((t) => t.toLowerCase())));
+
+    return effectiveCities.filter((c) => {
+      const name = c.name.toLowerCase();
+      const id = c.id.toLowerCase();
+      const region = c.region.toLowerCase();
+      const desc = (c.description || "").toLowerCase();
+
+      // Direct match
+      if (name.includes(q) || id.includes(q) || region.includes(q) || desc.includes(q)) {
+        return true;
+      }
+
+      // Alias / variant match
+      return uniqueTerms.some(
+        (term) => name.includes(term) || id.includes(term) || region.includes(term) || desc.includes(term)
+      );
+    });
+  }, [effectiveCities, searchQuery]);
 
   // Group into Major Hubs vs District Headquarters
   const { majorHubs, districtHqs } = useMemo(() => {
@@ -81,7 +114,7 @@ export default function StartLocationSelector({
       const isDistrictHq =
         city.name.toLowerCase().includes("district hq") ||
         city.name.toLowerCase().includes("district") ||
-        city.id.includes("-");
+        (city.id.includes("-") && !["jog-falls", "b-r-hills"].includes(city.id));
 
       if (isDistrictHq) {
         hqs.push(city);
@@ -107,90 +140,100 @@ export default function StartLocationSelector({
         type="button"
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-[#0a0f18] hover:border-amber-400/50 px-3.5 py-3 text-left text-white transition focus:border-amber-400 focus:outline-none disabled:opacity-50"
+        className="w-full flex items-center justify-between rounded-2xl border border-[#c8dec2] bg-white hover:border-[#2d6a4f]/50 px-4 py-3 text-left text-[#14231b] transition shadow-xs focus:border-[#2d6a4f] focus:outline-hidden disabled:opacity-50 cursor-pointer"
       >
         <div className="flex items-center gap-2.5 min-w-0">
-          <MapPin className="h-4 w-4 text-amber-400 shrink-0" />
+          <MapPin className="h-4 w-4 text-[#2d6a4f] shrink-0" />
           <div className="flex flex-col min-w-0">
-            <span className="text-sm font-semibold truncate text-white">
+            <span className="text-sm font-semibold truncate text-[#14231b]">
               {selectedLocation.name}
             </span>
-            <span className="text-[11px] text-slate-400 truncate">
+            <span className="text-[11px] text-[#5e7467] truncate">
               {selectedLocation.region || "Karnataka"}
             </span>
           </div>
         </div>
 
         <ChevronDown
-          className={`h-4 w-4 text-slate-400 transition-transform duration-200 shrink-0 ml-2 ${
-            isOpen ? "rotate-180 text-amber-400" : ""
+          className={`h-4 w-4 text-[#5e7467] transition-transform duration-200 shrink-0 ml-2 ${
+            isOpen ? "rotate-180 text-[#2d6a4f]" : ""
           }`}
         />
       </button>
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute left-0 right-0 top-full mt-2 z-50 rounded-2xl border border-white/15 bg-[#0a0f18]/95 backdrop-blur-xl p-3 shadow-2xl animate-in fade-in-50 zoom-in-95">
+        <div className="absolute left-0 right-0 top-full mt-2 z-50 rounded-3xl border border-[#cbe1d5] bg-white/98 backdrop-blur-xl p-3.5 shadow-2xl animate-in fade-in-50 zoom-in-95">
           {/* Search Box */}
           <div className="relative mb-2.5">
-            <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+            <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[#5e7467]" />
             <input
               ref={inputRef}
               type="text"
               placeholder="Search 31 districts or transit hubs..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-white/5 py-2 pl-9 pr-8 text-xs text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none"
+              className="w-full rounded-xl border border-[#c8dec2] bg-[#f8faf8] py-2 pl-9 pr-8 text-xs text-[#14231b] placeholder-[#7d9385] focus:border-[#2d6a4f] focus:bg-white focus:outline-hidden"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-2.5 text-slate-400 hover:text-white"
+                className="absolute right-2.5 top-2.5 text-[#5e7467] hover:text-[#14231b]"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
             )}
           </div>
 
-          {/* Results Scroll Area */}
-          <div className="max-h-64 overflow-y-auto space-y-3 pr-1 text-xs">
+          {/* List Container */}
+          <div className="max-h-64 overflow-y-auto space-y-4 pr-1 text-xs">
             {filteredCities.length === 0 ? (
-              <div className="p-4 text-center text-xs text-slate-400">
-                No matching Karnataka location found for "{searchQuery}".
+              <div className="p-4 text-center text-[#5e7467]">
+                No matching Karnataka destination or district.
               </div>
             ) : (
               <>
-                {/* Major Transit Hubs Group */}
+                {/* Major Hubs */}
                 {majorHubs.length > 0 && (
                   <div>
-                    <div className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold">
-                      <Compass className="h-3 w-3" />
-                      <span>Major Transit Hubs ({majorHubs.length})</span>
-                    </div>
-                    <div className="space-y-1 mt-1">
+                    <span className="text-[10px] uppercase tracking-wider text-[#2d6a4f] font-bold px-2 py-1 block">
+                      Primary Transit Hubs & Airports
+                    </span>
+                    <div className="space-y-1">
                       {majorHubs.map((city) => {
-                        const isSelected = selectedLocation.id === city.id;
+                        const isSelected =
+                          city.id.toLowerCase() === value.toLowerCase() ||
+                          value.toLowerCase().includes(city.id.toLowerCase());
                         return (
                           <button
                             key={city.id}
                             type="button"
                             onClick={() => handleSelect(city.id)}
-                            className={`w-full flex items-center justify-between rounded-lg px-2.5 py-2 text-left transition ${
+                            className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-left transition cursor-pointer ${
                               isSelected
-                                ? "bg-amber-400/20 text-white font-semibold border border-amber-400/40"
-                                : "text-slate-300 hover:bg-white/5 hover:text-white"
+                                ? "bg-[#2d6a4f] text-white font-semibold"
+                                : "hover:bg-[#eaf4ee] text-[#14231b]"
                             }`}
                           >
-                            <div className="min-w-0 pr-2">
-                              <span className="block truncate text-xs text-white">
-                                {city.name}
-                              </span>
-                              <span className="block text-[10px] text-slate-400 truncate">
-                                {city.region}
-                              </span>
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Compass
+                                className={`h-3.5 w-3.5 shrink-0 ${
+                                  isSelected ? "text-amber-200" : "text-[#2d6a4f]"
+                                }`}
+                              />
+                              <div className="truncate">
+                                <span className="block truncate">{city.name}</span>
+                                <span
+                                  className={`text-[10px] block truncate ${
+                                    isSelected ? "text-emerald-100" : "text-[#5e7467]"
+                                  }`}
+                                >
+                                  {city.region}
+                                </span>
+                              </div>
                             </div>
-                            {isSelected && <Check className="h-3.5 w-3.5 text-amber-400 shrink-0" />}
+                            {isSelected && <Check className="h-3.5 w-3.5 shrink-0 ml-2 text-white" />}
                           </button>
                         );
                       })}
@@ -198,36 +241,46 @@ export default function StartLocationSelector({
                   </div>
                 )}
 
-                {/* District Headquarters Group */}
+                {/* District Headquarters */}
                 {districtHqs.length > 0 && (
-                  <div className="pt-2 border-t border-white/5">
-                    <div className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold">
-                      <Building2 className="h-3 w-3" />
-                      <span>District Headquarters ({districtHqs.length})</span>
-                    </div>
-                    <div className="space-y-1 mt-1">
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider text-[#5e7467] font-semibold px-2 py-1 block">
+                      District Headquarters (31 Districts)
+                    </span>
+                    <div className="space-y-1">
                       {districtHqs.map((city) => {
-                        const isSelected = selectedLocation.id === city.id;
+                        const isSelected =
+                          city.id.toLowerCase() === value.toLowerCase() ||
+                          value.toLowerCase().includes(city.id.toLowerCase());
                         return (
                           <button
                             key={city.id}
                             type="button"
                             onClick={() => handleSelect(city.id)}
-                            className={`w-full flex items-center justify-between rounded-lg px-2.5 py-2 text-left transition ${
+                            className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-left transition cursor-pointer ${
                               isSelected
-                                ? "bg-amber-400/20 text-white font-semibold border border-amber-400/40"
-                                : "text-slate-300 hover:bg-white/5 hover:text-white"
+                                ? "bg-[#2d6a4f] text-white font-semibold"
+                                : "hover:bg-[#eaf4ee] text-[#14231b]"
                             }`}
                           >
-                            <div className="min-w-0 pr-2">
-                              <span className="block truncate text-xs text-white">
-                                {city.name}
-                              </span>
-                              <span className="block text-[10px] text-slate-400 truncate">
-                                {city.region}
-                              </span>
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Building2
+                                className={`h-3.5 w-3.5 shrink-0 ${
+                                  isSelected ? "text-amber-200" : "text-[#5e7467]"
+                                }`}
+                              />
+                              <div className="truncate">
+                                <span className="block truncate">{city.name}</span>
+                                <span
+                                  className={`text-[10px] block truncate ${
+                                    isSelected ? "text-emerald-100" : "text-[#5e7467]"
+                                  }`}
+                                >
+                                  {city.region}
+                                </span>
+                              </div>
                             </div>
-                            {isSelected && <Check className="h-3.5 w-3.5 text-amber-400 shrink-0" />}
+                            {isSelected && <Check className="h-3.5 w-3.5 shrink-0 ml-2 text-white" />}
                           </button>
                         );
                       })}
@@ -236,12 +289,6 @@ export default function StartLocationSelector({
                 )}
               </>
             )}
-          </div>
-
-          {/* Quick Counter Footer */}
-          <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-slate-500 px-1">
-            <span>All 31 Districts Supported</span>
-            <span>{filteredCities.length} locations</span>
           </div>
         </div>
       )}
